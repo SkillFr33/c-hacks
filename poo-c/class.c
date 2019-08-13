@@ -2,6 +2,17 @@
 #include <stdio.h>
 #include "interface.h"
 
+// funções globais para a construção e destrução do objeto
+
+static struct point* _point_constructor();
+static void* _point_destructor(struct point** object);
+
+// struct _point (não confunda com struct point) que contém o operador new e delete da classe
+struct _point Point = {
+  .new = _point_constructor,
+  .delete = _point_destructor
+};
+
 // funções static que serão as funções-membro da clase:
 static void _setX(struct point* const this, const int _x) {
   this->x = _x;
@@ -23,7 +34,7 @@ static void _printPoint(const struct point* const this) {
   printf("(%.2lf, %.2lf)\n", this->x, this->y);
 }
 
-struct point* constructor() {
+static struct point* _point_constructor() {
   struct point* _my_point = (struct point*) malloc( sizeof(struct point) );
   
   if(_my_point != NULL){
@@ -44,18 +55,19 @@ struct point* constructor() {
   return _my_point;
 }
 
-void* destructor(struct point* object) {
-  if(object == NULL)
+static void* _point_destructor(struct point** object) {
+  if(*object == NULL)
     return NULL;
   
-  object->x = 0;
-  object->y = 0;
+  (*object)->x = 0;
+  (*object)->y = 0;
 
-  object->getX = NULL;
-  object->getY = NULL;
-  object->setX = NULL;
-  object->setY = NULL;
+  (*object)->getX = NULL;
+  (*object)->getY = NULL;
+  (*object)->setX = NULL;
+  (*object)->setY = NULL;
 
-  free(object);
+  free(*object);
+  *object = NULL;
   return NULL;
 }
