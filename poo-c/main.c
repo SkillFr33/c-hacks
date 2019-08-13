@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include "interface.h"
 
-
 int main() {
 
   struct point* p = Point.new();
@@ -23,8 +22,6 @@ int main() {
 
   Point.delete(&p);
   // ou: p = Point.delete(&p);
-
-
 
   return 0;
 }
