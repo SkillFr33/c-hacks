@@ -2,7 +2,6 @@
 #define _INTERFACE_H
 
 /* interface da classe */
-
 struct point {
   // funções-membro:
   
@@ -21,11 +20,10 @@ struct point {
   double y;
 };
 
-typedef struct point Point;
-
-// funções globais para a construção e destrução do objeto
-struct point* constructor();
-void* destructor(struct point* object);
+struct _point {
+  struct point* (*new) (void);
+  void* (*delete) (struct point** object);
+};
 
 /* 
   Note que nesse arquivo não são declarados os cabeçalhos das funções-membro da classe,
@@ -33,5 +31,7 @@ void* destructor(struct point* object);
   no arquivo de implementação da classe, e o construtor faz com que ponteiros de função da classe
   apontem para essas funções static, sendo assim, possível utiliza-las apenas através de um objeto
 */
+
+extern struct _point Point;
 
 #endif // _INTERFACE_H
