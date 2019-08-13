@@ -2,9 +2,10 @@
 #include <stdio.h>
 #include "interface.h"
 
+
 int main() {
 
-  Point* p = constructor(); // construtor
+  struct point* p = Point.new();
   p->setX(p, 10);   // configurando valores do membro de dado x
   p->setY(p, 12.5); // configurando valores do membro de dado y
 
@@ -20,7 +21,10 @@ int main() {
   */
   //printPoint(p); // referência não definida para printPoint
 
-  p = destructor(p); // destrutor, retorna NULL
+  Point.delete(&p);
+  // ou: p = Point.delete(&p);
+
+
 
   return 0;
 }
