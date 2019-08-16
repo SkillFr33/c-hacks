@@ -8,7 +8,8 @@ static Food food_array[] = {
   [Coffee] = {"coffee", 14, 14, 14}
 };
 
-static void _sleep(Person* this, double hours) {
+static void _sleep(void* _this, double hours) {
+  Person* this = (struct person*) _this;
   this->sleep_point += (hours * 5);
   this->hunger -= (hours * 3.3);
   this->happiness += (hours * 1.2);
@@ -16,7 +17,8 @@ static void _sleep(Person* this, double hours) {
   printf("%s dormiu por %.1lf horas!\n", this->name, hours);
 }
 
-static void _play(Person* this, double hours) {
+static void _play(void* _this, double hours) {
+  Person* this = (struct person*) _this;
   this->sleep_point -= (hours * 2);
   this->hunger -= (hours * 2.2);
   this->happiness += (hours * 3.3);
@@ -24,7 +26,8 @@ static void _play(Person* this, double hours) {
   printf("%s jogou por %.1lf horas!\n", this->name, hours);
 }
 
-static void _eat(Person* this, FoodType food) {
+static void _eat(void* _this, FoodType food) {
+  Person* this = (struct person*) _this;
   Food* f = &food_array[food];
   this->sleep_point += f->sleep_point;
   this->hunger += f->hunger;
@@ -33,7 +36,8 @@ static void _eat(Person* this, FoodType food) {
   printf("%s consumiu %s!\n", this->name, f->food_name);
 }
 
-static void _info(const Person* const this) {
+static void _info(const void* const _this) {
+  Person* this = (struct person*) _this;
   printf(
     "Nome: %s\n"          \
     "Felicidade: %.2lf\n" \
@@ -58,7 +62,9 @@ static void* _new(char* const name) {
   return object;
 }
 
-static void* _delete(struct person* object) {
+static void* _delete(void* _object) {
+  Person* object = (struct person*) _object;
+  
   object->play = NULL;
   object->info = NULL;
   object->eat  = NULL;
