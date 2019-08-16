@@ -13,9 +13,9 @@ typedef enum {
   Coffee
 } FoodType;
 
-// Struct que representa uma comidam, contendo seus atributos
+// Struct que representa uma comida, contendo seus atributos
 typedef struct food {
-  char*  food_name;
+  const char* food_name;
   double sleep_point; 
   double happiness;
   double hunger;
@@ -24,28 +24,32 @@ typedef struct food {
 /* ------------------------------------------------------------------------- */
 
 // Struct que representa uma pessoa
-typedef struct person {
+typedef struct person Person;
+struct person {
   // funções-membro
-  void (*sleep)(struct person* const this, double hours);
-  void (*play)(struct person* const this, double hours);
-  void (*eat)(struct person* const this, FoodType food);
-  void (*info)(const struct person* const);
+  void (*sleep)(Person* const this, double hours);
+  void (*play)(Person* const this, double hours);
+  void (*eat)(Person* const this, FoodType food);
+  void (*info)(const Person* const);
 
   // membros de dado
-  char*  name;
+  const char* name;
   double sleep_point;
   double hunger;
   double happiness;
 
-} Person;
+};
 
-typedef struct _person {
+// struct que contém alguns ponteiros para funções utilitárias da classe,
+// como o construtor e destrutor
+typedef struct _person _person;
+struct _person {
   void* (*new)(char* const name);
-  void* (*delete)(void* this);
-} _person;
-
-extern _person _Person; // _Person vem de class.c
+  void* (*delete)(Person* this);
+};
 
 /* ------------------------------------------------------------------------- */
+
+extern _person _Person;
 
 #endif
