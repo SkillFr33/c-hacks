@@ -27,10 +27,10 @@ typedef struct food {
 typedef struct person Person;
 struct person {
   // funções-membro
-  void (*sleep)(Person* const this, double hours);
-  void (*play)(Person* const this, double hours);
-  void (*eat)(Person* const this, FoodType food);
-  void (*info)(const Person* const);
+  void (*sleep)(void* const _this, double hours);
+  void (*play)(void* const _this, double hours);
+  void (*eat)(void* const _this, FoodType food);
+  void (*info)(const void* const);
 
   // membros de dado
   const char* name;
@@ -45,7 +45,7 @@ struct person {
 typedef struct _person _person;
 struct _person {
   void* (*new)(char* const name);
-  void* (*delete)(Person* this);
+  void* (*delete)(void* _object);
 };
 
 /* ------------------------------------------------------------------------- */
