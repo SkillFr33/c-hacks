@@ -19,9 +19,14 @@ void free_memory() {
 void* alloc(size_t bytes) {
   static int ptr_to_heap_counter = 0;
   
-  void* ptr = malloc(bytes);
-  pointers_to_heap[ptr_to_heap_counter] = ptr;
-  ++ptr_to_heap_counter;
+  void* ptr = NULL;
+  if(ptr_to_heap_counter == MAX_POINTERS)
+    printf("Não é possível alocar mais memória! ptr retornará NULL!\n");
+  else {
+    ptr = malloc(bytes);
+    pointers_to_heap[ptr_to_heap_counter] = ptr;
+    ++ptr_to_heap_counter;
+  }
 
   return ptr;
 }
