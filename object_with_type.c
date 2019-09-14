@@ -68,7 +68,7 @@ Object* alloc(var type, var value) {
    *            ^
    *             `- ponteiro obj (note que obj aponta para uma região mais a frente do bloco alocado, essa região é quem conterá meu Object).
   */
-  Object* obj = (Object*)(head + sizeof(Header));
+  Object* obj = (Object*)( ((char*)head) + sizeof(Header));
   
   /*
    * Agora com o ponteiro obj, consigo manipular os bytes para configurar o valor armazenado pelo meu objeto
@@ -86,6 +86,12 @@ Object* alloc(var type, var value) {
   return obj; // retorna apenas o endereço que inicia meu Object, tecnicamente obj não poderá acessar seu tipo ao fazer obj->type
 } // aqui encerra a função alloc (ela não é grande, ficou por conta dos comentários :] )
 
+#define get_header(object) ((Header*) ( ((char*) object ) - sizeof(Header)))
+
+void free_object(var object) {
+  var head = get_header(object);
+  free(head);
+}
 
 /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
 
@@ -107,18 +113,21 @@ char* type_of(var object) {
   // 3. B->type = como B é um endereço de memória que contém um Header, eu apenas derreferencio essa memória para obter
   // o tipo do meu objeto, logo B->type é a mesma coisa que head->type na função alloc.
 
-  return ( ((Header*) object) - sizeof(Header) )->type; // retorna o tipo
+  return ( (Header*) ( ((char*) object ) - sizeof(Header)) )->type; // retorna o tipo
 }
 
 int main() {
   
   Object* obj = alloc("String", "Olá, Mundo!");
   printf("Tipo do 'obj': %s\n", type_of(obj));
-  printf("Valor armazenado por 'obj': %s\n\n", obj->value);
+  printf("Valor armazenado por 'obj': %s\n\n", (char*) obj->value);
 
   Object* obj_dois = alloc("Inteiro", (int*) 10);
   printf("Tipo do 'obj_dois': %s\n", type_of(obj_dois));
-  printf("Valor armzenado por 'obj_dois': %d\n", (int) obj_dois->value);
+  printf("Valor armzenado por 'obj_dois': %ld\n", (long) obj_dois->value);
+
+  free_object(obj);
+  free_object(obj_dois);
 
   return 0;
 }
