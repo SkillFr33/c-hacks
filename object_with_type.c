@@ -101,7 +101,7 @@ void free_object(var object) {
 char* type_of(var object) {
 
   // Explicando a expressão
-  // 1. ((Header*) object) = converto meu ponteiro object para o tornar um ponteiro para Header, dessa forma, conseguirei,
+  // 1. ((char*) object) = converto meu ponteiro object para o tornar um ponteiro para char, dessa forma, conseguirei,
   // deslocar corretamente para chegar no byte que inicia o Header do objeto. Chamaremos essa parte de 'A'
 
   // 2. A - sizeof(Header) = subtraio a memória apontada por A pelo tamanho do Header, para chegar no byte que o inicia
