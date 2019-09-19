@@ -4,8 +4,14 @@
 
 int main() {
 
-  String* str = new_string("Olá, mundo!");
-  puts(str->ptr);
-  printf("%ld\n", str->length(str));
+  String* str = new_string("oi");
+  str->info(str);
 
+  str->setString(str, "Meu nome eh Gabriel Mendes");
+  str->info(str);
+  
+  str->setString(str, "asdfasdfasdf");
+  str->info(str);
+
+  return 0;
 }
