@@ -15,6 +15,7 @@ struct _string {
   bool (*isEmpty)(void* this);
   bool (*setString)(struct _string* this, char* new_str);
   void (*info)(struct _string* this);
+  bool (*copy_string)(struct _string* this, struct _string* other);
 };
 typedef struct _string String;
 

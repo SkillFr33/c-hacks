@@ -5,15 +5,19 @@
 int main() {
 
   String* str = new_string("oi");
-  str->info(str);
+  String* str2 = new_string("Ola");
 
-  str->setString(str, "Meu nome eh Gabriel Mendes");
   str->info(str);
-  
-  str->setString(str, "asdfasdfasdf");
+  str->info(str2);
+
+  str->copy_string(str, str2);
+  str2->setString(str2, "eita, oi!?");
+
   str->info(str);
+  str->info(str2);
 
   str = delete_string(str);
+  str2 = delete_string(str2);
 
   return 0;
 }

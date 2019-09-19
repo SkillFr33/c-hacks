@@ -59,6 +59,12 @@ static void __info(struct _string* this) {
   , this->ptr, header->__size);
 }
 
+static bool 
+__copy_string(struct _string* this, struct _string* other) {
+  return this->setString(this, other->ptr);
+}
+
+
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 // Construtor
@@ -79,6 +85,7 @@ String* new_string(char* str) {
   string->isEmpty = __isEmpty;
   string->setString = __setString;
   string->info = __info;
+  string->copy_string = __copy_string;
 
   // Copiando str para string->str. Se str for NULL, string->ptr apontará para um '\0'
   if(str != NULL)
