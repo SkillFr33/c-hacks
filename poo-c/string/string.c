@@ -4,25 +4,25 @@
 #include "string.h"
 
 // Função que pega o header de um objeto de String. No header possui os membros private
-static Header* get_header(String* object) {
-  return (Header*) ((char*) object - sizeof(Header));
+static Header* get_header(String* this) {
+  return (Header*) ((char*) this - sizeof(Header));
 }
 
 // função que retorna o tamanho da string
-static size_t __length(void* object) {
-  Header* header = get_header(object);
+static size_t __length(void* this) {
+  Header* header = get_header(this);
   return header->__size;
 }
 
-static bool __isEmpty(void* object) {
-  Header* header = get_header(object);
+static bool __isEmpty(void* this) {
+  Header* header = get_header(this);
   return header->__size == 0;
 }
 
 // Função que configura a string
-static bool __setString(struct _string* object, char* new_str) {
-  Header* header = get_header(object);
-  memset(object->ptr, 0, header->__size + 1); // zera o conteúdo da minha string
+static bool __setString(struct _string* this, char* new_str) {
+  Header* header = get_header(this);
+  memset(this->ptr, 0, header->__size + 1); // zera o conteúdo da minha string
 
   // se a nova string for NULL
   if(new_str == NULL){
@@ -33,24 +33,24 @@ static bool __setString(struct _string* object, char* new_str) {
     size_t new_size = strlen(new_str); // pega
 
     if(new_size > header->__size)
-      object->ptr = realloc(object->ptr, new_size + 1);
+      this->ptr = realloc(this->ptr, new_size + 1);
     
     header->__size = new_size;
-    memcpy(object->ptr, new_str, new_size);
+    memcpy(this->ptr, new_str, new_size);
     return 1; // sucesso
   }
 
   return 0; // falha
 }
 
-static void __info(struct _string* object) {
-  Header* header = get_header(object);
+static void __info(struct _string* this) {
+  Header* header = get_header(this);
 
   printf(          \
     "=======| Info |=======\n" \
     "String: %s\n" \
     "Size: %ld\n\n"  \
-  , object->ptr, header->__size);
+  , this->ptr, header->__size);
 }
 
 String* new_string(char* str) {

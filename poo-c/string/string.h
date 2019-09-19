@@ -11,10 +11,10 @@ typedef struct _string_private_members Header;
 
 struct _string {
   char* ptr;
-  size_t (*length)(void* object);
-  bool (*isEmpty)(void* object);
-  bool (*setString)(struct _string* object, char* new_str);
-  void (*info)(struct _string* object);
+  size_t (*length)(void* this);
+  bool (*isEmpty)(void* this);
+  bool (*setString)(struct _string* this, char* new_str);
+  void (*info)(struct _string* this);
 };
 typedef struct _string String;
 
