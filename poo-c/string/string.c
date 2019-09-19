@@ -3,6 +3,12 @@
 #include <string.h>
 #include "string.h"
 
+/*
+ * Funções que iniciam com __ são funções que serão apontadas pelos ponteiros
+ * para função da classe, dessa forma, representam os métodos da classe. 
+*/
+
+
 // Função que pega o header de um objeto de String. No header possui os membros private
 static Header* get_header(String* this) {
   return (Header*) ((char*) this - sizeof(Header));
@@ -53,6 +59,9 @@ static void __info(struct _string* this) {
   , this->ptr, header->__size);
 }
 
+// -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+// Construtor
 String* new_string(char* str) {
 
   // pegando tamanho da string. Se str for NULL, o tamanhao será 0
@@ -78,4 +87,27 @@ String* new_string(char* str) {
     string->ptr[0] = '\0';
 
   return string;
+}
+
+// Destrutor
+void* delete_string(struct _string* this) {
+  if(this == NULL)
+    return NULL;
+
+  Header* header = get_header(this);
+
+  // Limpando membros public e private
+  memset(this->ptr, 0, header->__size);
+  header->__size = 0;
+  free(this->ptr);
+
+  // Configurando ponteiros para função para apontarem para NULL
+  this->info = NULL;
+  this->isEmpty = NULL;
+  this->length = NULL;
+  this->setString = NULL;
+
+  free(header);
+
+  return NULL;
 }
