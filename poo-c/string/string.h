@@ -19,5 +19,6 @@ struct _string {
 typedef struct _string String;
 
 String* new_string(char* str);
+void* delete_string(struct _string* this);
 
 #endif // _STRING_H_
