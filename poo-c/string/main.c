@@ -13,5 +13,7 @@ int main() {
   str->setString(str, "asdfasdfasdf");
   str->info(str);
 
+  str = delete_string(str);
+
   return 0;
 }
