@@ -41,7 +41,7 @@ char* my_getline(void) {
     character = getchar();
     
     if(position == bytes) {
-      puts("realloc");
+      //puts("realloc");
       bytes += INCREMENT_BUFFER;
       buffer = realloc(buffer, bytes);
       if(!buffer) {
