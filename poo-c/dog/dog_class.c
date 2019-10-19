@@ -125,11 +125,10 @@ static void _set_nome(void* this, string nome) {
   // string passada é nula ou vazia, dessa forma, o nome do cachorro passa a ser DEFAULT_NAME
   if(nome == NULL || nome[0] == '\0') {
     fprintf(stderr, "O nome do cachorro não pode ser vazio! Nome definido como \"%s\"\n", DEFAULT_NAME);
-    strcpy(header->nome, DEFAULT_NAME);
+    strncpy(header->nome, DEFAULT_NAME, bytes - 1);
   }
   else
-    strcpy(header->nome, nome);
-  header->nome[bytes - 1] = '\0';
+    strncpy(header->nome, nome, bytes - 1);
 
 }
 
