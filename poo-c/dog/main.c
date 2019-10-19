@@ -2,6 +2,11 @@
 #include <stdio.h>
 #include "dog_interface.h"
 
+/*
+  compile com:
+  $ gcc main.c dog_class.c -o main
+*/
+
 int main() {
 
   // instanciando objeto
