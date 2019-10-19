@@ -116,7 +116,6 @@ static void _set_nome(void* this, string nome) {
   DogPrivateMembers* header = get_private_offset(this);
 
   // pegando o tamanho da string atual e da string nova
-  size_t tamanho_nome_atual = header->nome == NULL ? 0 : strlen(header->nome);
   size_t tamanho_novo_nome  = nome == NULL ? 0 : strlen(nome);
   size_t bytes = tamanho_novo_nome == 0 ? strlen(DEFAULT_NAME) + 1 : tamanho_novo_nome + 1;
 
