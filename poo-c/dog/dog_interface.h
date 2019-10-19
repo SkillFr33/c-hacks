@@ -12,13 +12,13 @@ typedef char* string;
 
 // membros privados da classe
 typedef struct dog_private_members {
-	private string nome;
-	private double peso;
+  private string nome;
+  private double peso;
 } DogPrivateMembers;
 
 // membros públicos da classe. Cada objeto instânciado será um ponteiro para essa struct
 typedef struct dog_public_members {
-	public double (*get_peso)(void* this);
+  public double (*get_peso)(void* this);
   public void (*set_peso)(void* this, double peso);
 
   public const char* const (*get_nome)(void* this);
