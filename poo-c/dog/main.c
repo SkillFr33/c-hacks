@@ -22,5 +22,5 @@ int main() {
   // liberando memória do objeto
   dog = Dog.delete(dog);
 
-	return EXIT_SUCCESS;
+  return EXIT_SUCCESS;
 }
