@@ -5,7 +5,7 @@
 int main() {
 
   // instanciando objeto
-	dog* dog = Dog.new("Cachorro", 12.33);
+  dog* dog = Dog.new("Cachorro", 12.33);
   
   dog->latir(dog);
 
