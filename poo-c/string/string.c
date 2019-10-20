@@ -15,10 +15,6 @@ class_string String = {
   ******************** MACROS UTILITÁRIAS ********************
 */
 
-#define or ||
-#define and &&
-#define not !
-
 #define null_string_error ( \
   "Erro: tentativa de iniciar a string com um ponteiro nulo!\n" \
   "Caso queira criar uma string vazia, utilize \"String.empty()\"\n" \
@@ -61,6 +57,7 @@ static size_t set_string(object this, const char* const new_buffer) {
 
   strncpy(string_private->buffer, new_buffer, size_new_buffer);
 
+  string_private->size = size_new_buffer;
   return size_new_buffer;
 }
 
@@ -97,6 +94,8 @@ static object new(const char* const init_buffer) {
   string_public->set_string = set_string;
   string_public->get_size = get_size;
   string_public->at = at;
+  string_public->clear = clear;
+
 
   return string_public;
 }
@@ -117,6 +116,7 @@ static void* delete(object this) {
   this->get_size = NULL;
   this->get_string = NULL;
   this->set_string = NULL;
+  this->clear = NULL;
 
   free(string_private);
 
@@ -136,4 +136,14 @@ static char at(object this, const int index) {
   }
 
   return string_private->buffer[index];
+}
+
+static void clear(object this) {
+  StringPrivateMembers* string_private = get_private_offset(this);
+
+  if(string_private->buffer == NULL)
+    return;
+
+  memset(string_private->buffer, '\0', string_private->size);
+  string_private->size = 0;
 }
