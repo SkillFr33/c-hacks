@@ -1,10 +1,19 @@
 #include "string.h"
 
+// construtor do objeto
+static object new(const char* const init_buffer);
+
+// destrutor do objeto
+static void* delete(object this);
+
+// retorna um objeto vazio
+static object empty(void);
+
 // Retorna o tamanho da string
 static size_t get_size(object this);
 
-// Configura o buffer da string com um novo valor
-static void set_string(object this, const char* new_buffer);
+// Configura o buffer da string com um novo valor. Retorno o tamanho da nova string
+static size_t set_string(object this, const char* const new_buffer);
 
 /*
   Retorna o endereço apontado pelo buffer da string
@@ -22,5 +31,5 @@ static void set_string(object this, const char* new_buffer);
 */
 static const char* const get_string(object this);
 
-// Retorna uma cópia do caractere contido na posição `index` da string
-char at(object this, const int index);
+// Retorna uma cópia do caractere contido na posição `index` da string. Valida o índece passado
+static char at(object this, const int index);
