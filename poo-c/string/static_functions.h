@@ -33,3 +33,6 @@ static const char* const get_string(object this);
 
 // Retorna uma cópia do caractere contido na posição `index` da string. Valida o índece passado
 static char at(object this, const int index);
+
+// Zera o conteúdo da string
+static void clear(object this);
