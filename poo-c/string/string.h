@@ -1,7 +1,9 @@
 #ifndef _STRING_H_
 #define _STRING_H_
 
-#include <stdbool.h>
+#define or ||
+#define and &&
+#define not !
 
 // syntax sugar para 'struct string_private_members*'
 typedef struct string_public_members* object; 
@@ -23,6 +25,7 @@ typedef struct string_public_members {
 
   // métodos utilitários
   char (*at)(object this, const int index);
+  void (*clear)(object this);
 
 } StringPublicMembers;
 typedef StringPublicMembers* string;
