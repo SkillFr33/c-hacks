@@ -26,6 +26,7 @@ typedef struct string_public_members {
   // métodos utilitários
   char (*at)(object this, const int index);
   void (*clear)(object this);
+  void (*copy)(object this, object other);
 
 } StringPublicMembers;
 typedef StringPublicMembers* string;
