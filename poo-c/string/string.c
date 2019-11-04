@@ -95,7 +95,7 @@ static object new(const char* const init_buffer) {
   string_public->get_size = get_size;
   string_public->at = at;
   string_public->clear = clear;
-
+  string_public->copy = copy;
 
   return string_public;
 }
@@ -108,6 +108,8 @@ static void* delete(object this) {
   
   // zerando e liberando memória dos membros privados
   string_private->size = 0;
+
+  memset(string_private->buffer, '\0', string_private->size);
   free(string_private->buffer);
   string_private->buffer = NULL;
 
@@ -117,6 +119,7 @@ static void* delete(object this) {
   this->get_string = NULL;
   this->set_string = NULL;
   this->clear = NULL;
+  this->copy = NULL;
 
   free(string_private);
 
@@ -146,4 +149,14 @@ static void clear(object this) {
 
   memset(string_private->buffer, '\0', string_private->size);
   string_private->size = 0;
+}
+
+static void copy(object this, object other) {
+  if(this == NULL or other == NULL)
+    return;
+
+  StringPrivateMembers* other_string_private = get_private_offset(other);
+
+  set_string(this, other_string_private->buffer);
+
 }
