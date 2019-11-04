@@ -36,3 +36,7 @@ static char at(object this, const int index);
 
 // Zera o conteúdo da string
 static void clear(object this);
+
+// Copia o conteúdo do objeto this, para o objeto other
+static void copy(object this, object other);
+
