@@ -2,8 +2,8 @@
 #include <stdio.h>
 #include <string.h> // strlen
 
-#define INIT_BUFFER_SIZE 2 // 32 bytes
-#define INCREMENT_BUFFER 2 // 16 bytes
+#define INIT_BUFFER_SIZE 32 // 32 bytes
+#define INCREMENT_BUFFER 16 // 16 bytes
 #define true 1
 
 char* my_getline(void);
