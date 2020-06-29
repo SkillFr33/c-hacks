@@ -22,7 +22,9 @@ int main() {
   
   dog->set_peso(dog, 0);
 
-  printf("%s está com %.2lf quilos!\n", dog->get_nome(dog), dog->get_peso(dog));
+  char* nome = dog->get_nome(dog); // isso gera um warning, pois 'nome' descarta o qualificador 'const' do conteúdo apontado
+  // const char* nome = dog->get_nome(dog); /*** isso é ok ***/
+  printf("%s está com %.2lf quilos!\n", nome, dog->get_peso(dog));
 
   // liberando memória do objeto
   dog = Dog.delete(dog);

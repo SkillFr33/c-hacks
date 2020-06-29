@@ -3,7 +3,6 @@
 #include <memory.h>
 #include <string.h>
 #include "dog_interface.h"
-#include "static_functions.h"
 
 // função que desloca o ponteiro dos membros public para a região dos membros privados
 static DogPrivateMembers* get_private_offset(void* public_offset) {
@@ -19,68 +18,6 @@ static DogPublicMembers* get_public_offset(void* private_offset) {
 #define alloc_dog() ( \
   (DogPrivateMembers*) malloc(sizeof(DogPrivateMembers) + sizeof(DogPublicMembers)) \
 )
-
-/*
-  ************ IMPLEMENTAÇÃO DO CONSTRUTOR E DESTRUTOR DA CLASSE DOG ************
-*/
-
-// Construtor de objetos de dog
-static dog* _new(string nome, double peso) {
-  // membros privados
-  DogPrivateMembers* dog_private = alloc_dog();
-
-  // membros públicos
-  DogPublicMembers* dog_public = get_public_offset(dog_private);
-
-  // configurando os ponteiros para função apontarem para suas respectivas funções static
-  dog_public->get_nome = _get_nome;
-  dog_public->set_nome = _set_nome;
-  dog_public->get_peso = _get_peso;
-  dog_public->set_peso = _set_peso;
-  dog_public->latir    = _latir;
-
-  // inicializando atributos privados 
-  dog_private->nome = NULL;
-  _set_nome(dog_public, nome);
-  _set_peso(dog_public, peso);
-
-  // retornando ponteiro apenas para a região dos membros públicos 
-  return dog_public;
-}
-
-// Destrutor de objetos de dog
-static void* _delete(void* this) {
-  // configurando os ponteiros para função apontarem para NULL
-  ((DogPublicMembers*) this)->latir    = NULL;
-  ((DogPublicMembers*) this)->set_peso = NULL;
-  ((DogPublicMembers*) this)->get_peso = NULL;
-  ((DogPublicMembers*) this)->set_nome = NULL;
-  ((DogPublicMembers*) this)->get_nome = NULL;
-
-  // delocando ponteiro para a região dos membros privados
-  DogPrivateMembers* header = get_private_offset(this);
-
-  // configurando peso como 0 e liberando memória apontada por header->nome
-  header->peso = 0;
-  free(header->nome);
-
-  // liberando memória apontada por header, ou seja, todo o bloco que
-  // engloba os membros privados e membros públicos
-  free(header);
-
-  // retorna NULL para caso queria destruir o objeto e já configurar a
-  // variável que apontava para esse objeto como NULL
-  return NULL; // Ex.: dog = Dog.delete(dog);
-}
-
-/*
-  CRIANDO VARIÁVEL RESPONSÁVEL POR INSTANCIAR E DELETAR OBJETOS DA CLASSE DOG
-*/
-
-dog_class Dog = {
-  .new = _new,       // dog rex = Dog.new("Rex", 10.3);
-  .delete = _delete  // Dog.delete(rex);
-};
 
 /*
   ****************** IMPLEMENTAÇÃO DOS MÉTODOS DA CLASSE ******************
@@ -151,3 +88,65 @@ static const char* const _get_nome(void* this) {
 
   return header->nome; // perigoso isso aqui :c
 }
+
+/*
+  ************ IMPLEMENTAÇÃO DO CONSTRUTOR E DESTRUTOR DA CLASSE DOG ************
+*/
+
+// Construtor de objetos de dog
+static dog* _new(string nome, double peso) {
+  // membros privados
+  DogPrivateMembers* dog_private = alloc_dog();
+
+  // membros públicos
+  DogPublicMembers* dog_public = get_public_offset(dog_private);
+
+  // configurando os ponteiros para função apontarem para suas respectivas funções static
+  dog_public->get_nome = _get_nome;
+  dog_public->set_nome = _set_nome;
+  dog_public->get_peso = _get_peso;
+  dog_public->set_peso = _set_peso;
+  dog_public->latir    = _latir;
+
+  // inicializando atributos privados 
+  dog_private->nome = NULL;
+  _set_nome(dog_public, nome);
+  _set_peso(dog_public, peso);
+
+  // retornando ponteiro apenas para a região dos membros públicos 
+  return dog_public;
+}
+
+// Destrutor de objetos de dog
+static void* _delete(void* this) {
+  // configurando os ponteiros para função apontarem para NULL
+  ((DogPublicMembers*) this)->latir    = NULL;
+  ((DogPublicMembers*) this)->set_peso = NULL;
+  ((DogPublicMembers*) this)->get_peso = NULL;
+  ((DogPublicMembers*) this)->set_nome = NULL;
+  ((DogPublicMembers*) this)->get_nome = NULL;
+
+  // delocando ponteiro para a região dos membros privados
+  DogPrivateMembers* header = get_private_offset(this);
+
+  // configurando peso como 0 e liberando memória apontada por header->nome
+  header->peso = 0;
+  free(header->nome);
+
+  // liberando memória apontada por header, ou seja, todo o bloco que
+  // engloba os membros privados e membros públicos
+  free(header);
+
+  // retorna NULL para caso queria destruir o objeto e já configurar a
+  // variável que apontava para esse objeto como NULL
+  return NULL; // Ex.: dog = Dog.delete(dog);
+}
+
+/*
+  CRIANDO VARIÁVEL RESPONSÁVEL POR INSTANCIAR E DELETAR OBJETOS DA CLASSE DOG
+*/
+
+dog_class Dog = {
+  .new = _new,       // dog rex = Dog.new("Rex", 10.3);
+  .delete = _delete  // Dog.delete(rex);
+};
