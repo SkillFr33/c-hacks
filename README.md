@@ -1,2 +1,2 @@
 # c-hacks
-Esse repositório contém alguns "hacks" em C, ou seja, umas coisas bem doidas :] <s><small>ou não<small></s>
+Esse repositório possui alguns experimentos feitos por mim, dessa forma, pode conter tanto coisas interressantes quanto coisas bizarras.
