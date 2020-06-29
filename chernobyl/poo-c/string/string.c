@@ -3,13 +3,6 @@
 #include <string.h>
 #include <memory.h>
 #include "string.h"
-#include "static_functions.h"
-
-class_string String = {
-  .new = new,
-  .delete = delete,
-  .empty = empty
-};
 
 /*
   ******************** MACROS UTILITÁRIAS ********************
@@ -53,7 +46,7 @@ static size_t set_string(object this, const char* const new_buffer) {
   else
     string_private->buffer = realloc(string_private->buffer, size_new_buffer + 1);
 
-  memset(string_private->buffer, '\0', size_new_buffer + 1);
+  memset(string_private->buffer, 0, size_new_buffer + 1);
 
   strncpy(string_private->buffer, new_buffer, size_new_buffer);
 
@@ -63,8 +56,6 @@ static size_t set_string(object this, const char* const new_buffer) {
 
 static const char* const get_string(object this) {
   StringPrivateMembers* string_private = get_private_offset(this);
-  if(string_private->buffer == NULL)
-    return '\0';
 
   return string_private->buffer;
 }
@@ -75,9 +66,43 @@ static size_t get_size(object this) {
   return string_private->size;
 }
 
+static char at(object this, const int index) {
+  StringPrivateMembers* string_private = get_private_offset(this);
+  
+  if(index < 0 or index > string_private->size - 1) {
+    fprintf(stderr, index_out_of_bounds_error, index);
+    exit(1);
+  }
+
+  return string_private->buffer[index];
+}
+
+static void clear(object this) {
+  StringPrivateMembers* string_private = get_private_offset(this);
+
+  if(string_private->buffer == NULL)
+    return;
+
+  memset(string_private->buffer, 0, string_private->size);
+  string_private->size = 0;
+}
+
+static void copy(object this, object other) {
+  if(this == NULL or other == NULL)
+    return;
+
+  StringPrivateMembers* other_string_private = get_private_offset(other);
+
+  set_string(this, other_string_private->buffer);
+}
+
 /*
-  ********* CONSTRUTOR, DESTRUTOR e STATIC METHODS(não exigem uma instância) *********
+  ********* CONSTRUTOR, DESTRUTOR *********
 */
+
+static object empty(void) {
+  return String.new("\0");
+}
 
 static object new(const char* const init_buffer) {
   // membros private
@@ -107,9 +132,9 @@ static void* delete(object this) {
   StringPrivateMembers* string_private = get_private_offset(this);
   
   // zerando e liberando memória dos membros privados
+  memset(string_private->buffer, 0, string_private->size);
   string_private->size = 0;
 
-  memset(string_private->buffer, '\0', string_private->size);
   free(string_private->buffer);
   string_private->buffer = NULL;
 
@@ -126,37 +151,8 @@ static void* delete(object this) {
   return NULL;
 }
 
-static object empty(void) {
-  return String.new("\0");
-}
-
-static char at(object this, const int index) {
-  StringPrivateMembers* string_private = get_private_offset(this);
-  
-  if(index < 0 or index > string_private->size - 1) {
-    fprintf(stderr, index_out_of_bounds_error, index);
-    exit(1);
-  }
-
-  return string_private->buffer[index];
-}
-
-static void clear(object this) {
-  StringPrivateMembers* string_private = get_private_offset(this);
-
-  if(string_private->buffer == NULL)
-    return;
-
-  memset(string_private->buffer, '\0', string_private->size);
-  string_private->size = 0;
-}
-
-static void copy(object this, object other) {
-  if(this == NULL or other == NULL)
-    return;
-
-  StringPrivateMembers* other_string_private = get_private_offset(other);
-
-  set_string(this, other_string_private->buffer);
-
-}
+class_string String = {
+  .new = new,
+  .delete = delete,
+  .empty = empty
+};
