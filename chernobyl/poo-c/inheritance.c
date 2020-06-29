@@ -11,6 +11,8 @@
   Compile com: 
     $ gcc inheritance.c -fms-extensions -o [BINARIO]
     $ ./[BINARIO]
+
+  -fms-extensions é um extensão do GCC, logo pode ser pouco compatível com outros compiladores
 */
 
 // Classe base/mãe
