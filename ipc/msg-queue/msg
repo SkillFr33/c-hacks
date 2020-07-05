@@ -1,0 +1,3 @@
+Esse arquivo serve somente para gerar uma chave a partir de ftok. 
+Essa função usa metadados do arquivo e um inteiro positivo para gerar a chave que identifica a fila de mensagens
+É possível que haja colisão entra chaves 
