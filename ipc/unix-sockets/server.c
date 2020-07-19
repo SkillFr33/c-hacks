@@ -31,7 +31,7 @@ int main() {
   // um ponteiro para struct sockaddr. Essa última é uma interface genérica que representa qualquer endereço,
   // seja ele local (unix socket) ou de rede (ex. Internet)
   // O último argumento é o tamanho da struct que representa o endereço
-  if(bind(local_fd, (struct sockaddr*) &local, sizeof(local)) )
+  if(bind(local_fd, (struct sockaddr*) &local, sizeof(local)) == -1)
     panic("bind");
 
   // prepara o socket para aceitar conexões. No máximo 1 requisição de conexão pode ser enfileirada 
