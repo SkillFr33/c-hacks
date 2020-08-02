@@ -66,14 +66,16 @@ void handle_client(int client_fd) {
   while(1) {
     // recebe mensagem do cliente
     bytes = recv(client_fd, buffer, sizeof(buffer), MSG_NOSIGNAL);
-    if(bytes <= 0) { // se for menor ou igual a 0, ocorreu algum erro ou o cliente desconectou
+    if(bytes == 0) {
       puts("Um cliente desconectou!");
       exit(0);
     }
+    else if(bytes == -1)
+      panic("recv");
 
     toggle_case(buffer);
     bytes = send(client_fd, buffer, bytes, 0); // reenvia a mensagem de volta para o cliente
-    if(bytes <= 0)
+    if(bytes == -1)
       panic("send");
   }
 
