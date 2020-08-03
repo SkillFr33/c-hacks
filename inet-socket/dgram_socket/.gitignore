@@ -1,0 +1,5 @@
+.vs
+*.o
+obj/
+bin/client/client
+bin/server/server
