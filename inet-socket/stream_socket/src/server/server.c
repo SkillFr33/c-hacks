@@ -48,15 +48,13 @@ void get_addr_and_port(struct sockaddr* sa, int* port, char* buffer, size_t len)
   if(sa->sa_family == AF_INET) { // IPv4
     inet_ntop(sa->sa_family, &((struct sockaddr_in*) sa)->sin_addr, buffer, len);
     if(port)
-      *port = ((struct sockaddr_in*) sa)->sin_port;
+      *port = ntohs( ((struct sockaddr_in*) sa)->sin_port);
   }
   else { // IPv6
     inet_ntop(sa->sa_family, &((struct sockaddr_in6*) sa)->sin6_addr, buffer, len);
     if(port)
-      *port = ((struct sockaddr_in6*) sa)->sin6_port;
+      *port = ntohs( ((struct sockaddr_in6*) sa)->sin6_port );
   }
-
-  *port = ntohs(*port); // converte para little-endian
 }
 
 void handle_client(int client_fd) {
