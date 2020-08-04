@@ -32,6 +32,8 @@ int main(int argc, char* argv[]) {
     get_addr_and_port((struct sockaddr*) &ss, &port, str_ip, sizeof(str_ip));
     printf("\nMensagem recebida de %s:%d\n> \"%s\"\n", str_ip, port, buffer);
 
+    // utilizo o mesmo endpoint(socket) para enviar os dados, contudo direcionando para o endereço do
+    // host que acabou de me enviar dados(suas informações de endereço foram armazenadas em 'ss')
     sendto(sockfd, buffer, bytes, 0, (struct sockaddr*) &ss, size);
   }
 
