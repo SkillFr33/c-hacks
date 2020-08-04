@@ -702,7 +702,7 @@ while(1) { // loop infinito para receber os dados
   unsigned size = sizeof(ss);
   int recv_bytes = recvfrom(sockfd, buffer, 1024, 0, (struct sockaddr*) &ss, &size);
 
-  // após receber uma mensagem, 'ss' é preenchida com informações sobre o host remoto que 
+  // após receber uma mensagem, 'ss' é preenchida com informações sobre o host remoto que
   // enviou os dados e 'size' tem seu valor alterado para o tamanho da struct que representa
   // o endereço (sockaddr_in ou sockaddr_in6).
 
