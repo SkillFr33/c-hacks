@@ -65,7 +65,14 @@ void handle_client(int client_fd) {
     // recebe mensagem do cliente
     bytes = recv(client_fd, buffer, sizeof(buffer), MSG_NOSIGNAL);
     if(bytes == 0) {
-      puts("Um cliente desconectou!");
+      struct sockaddr_storage ss;
+      unsigned size = sizeof(ss);
+      getpeername(client_fd, (struct sockaddr*) &ss, &size);
+      char str_ip[INET6_ADDRSTRLEN];
+      int port;
+      get_addr_and_port((struct sockaddr*) &ss, &port, str_ip, sizeof(str_ip));
+      
+      printf("O cliente %s:%d desconectou!", str_ip, port);
       exit(0);
     }
     else if(bytes == -1)
