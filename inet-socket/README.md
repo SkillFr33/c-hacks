@@ -398,9 +398,9 @@ Note que antes de passar o endereço para `inet_ntop`, é necessário fazer a ve
 
 ---
 
-## `socket`
+## Criando o endpoint da conexão com `socket`
 
-Essa função é extremamente importante, pois é ela é o ponto de partida para adquirirmos o identificador de um socket(file descriptor) e começarmos a usá-lo como cliente ou servidor.
+Essa função é extremamente importante, pois ela é o ponto de partida para adquirirmos o identificador de um socket(file descriptor) e começarmos a usá-lo como cliente ou servidor.
 
 Definição de `socket`:
 
@@ -414,11 +414,11 @@ int socket(int domain, int type, int protocol)
 | `type`     | é o tipo do socket, ou seja, Stream Socket(SOCK_STREAM) ou Datagram Socket(SOCK_DGRAM) |
 | `protocol` | tipo do protocolo para determinado `type`; se for 0, o protocolo mais apropriado é escolhido |
 
-Se a chamada ao sistema falhar, a função retorna -1. Caso tudo ocorra corretamente, `socket` retorna um inteiro indicando o file descriptor do socket, ou seja, seu identificador. Com esse identificador, é possível fazer mais syscalls.
+Se a chamada ao sistema falhar, a função retorna -1. Caso tudo ocorra corretamente, `socket` retorna um inteiro indicando o file descriptor do socket, ou seja, seu identificador. Com esse identificador, é possível fazer diversas outras syscalls.
 
-## `bind`
+## Criando o servidor com `bind`, `listen` e `accept`
 
-Essa syscall é extremamente importante caso você queira ser o servidor. Essa função associa um determinado socket com um endereço, ou seja, uma porta + endereço de IP. Após o socket possuir um respectivo endereço, é possível colocá-lo para escutar por requisições de conexões.
+Caso você deseja criar um servidor, é necessário abordar primeiro a syscall `bind`. Essa função associa um determinado socket com um endereço, ou seja, o par IP/porta . Após o socket possuir um respectivo endereço, é possível colocá-lo para escutar por requisições de conexões.
 
 Definição de `bind`:
 
@@ -432,7 +432,7 @@ int bind(int sockfd, struct sockaddr* addr, socklen_t addrlen);
 | `addr`     | endereço que será associado ao socket. Pode ser uma `struct sockaddr_in` ou `struct sockaddr_in6` |
 | `addrlen`  | tamanho do parâmetro `addr` |
 
-Há duas formas de ligar um socket à um endereço: da forma antiga, empacotando manualmente o endereço; e da forma mais atualizada, usando a função `getaddrinfo`. Primeiro mostrarei a mais atualizada.
+Há duas formas de criar o endereço para ser associado à um socket: da forma antiga, empacotando manualmente o endereço; e da forma mais atualizada, usando a função `getaddrinfo`. Primeiro mostrarei a mais atualizada.
 
 ```C
 // Código sem verificação de erros!
@@ -535,6 +535,8 @@ Os passos para criar um servidor foram mostrados. Basicamente seguem essa seguin
 - chamada à `listen` para marcar o socket como pronto para escutar por requisição de conexões;
 - chamada à `accept` para aceitar requisições pendentes.
 
+## Criando o cliente
+
 Como dito, um `accept` responde à um `connect`. Essa última syscall geralmente é usada pelo cliente que deseja se conectar à um servidor. Ela basicamente conecta um socket com um endereço especificado, fazendo com que seja possível utilizar esse socket para se comunicar com o host remoto que reside nesse endereço.
 
 Definição de `connect`:
@@ -571,6 +573,8 @@ connect(sockfd, res->ai_addr, res->ai_addrlen);
 ```
 
 Quando chamamos `connect` passando o endereço desejado, um `accept` respectivo retira da fila a nossa conexão pendente, colocando em uma `struct sockaddr_storage` nossas informações, como endereço e porta (sim, também temos uma porta, que é selecionada automaticamente pelo kernel). Note que construímos o endereço do host remoto usando a função `getaddrinfo`, isso também poderia ser feito manualmente, atribuindo valores à uma sockaddr_in(6), contudo essa é uma forma antiga de se fazer.
+
+## Enviando e recebendo dados com `send` e `recv`
 
 Agora que cliente e servidor estão conectados, podemos utilizar as syscalls `send` e `recv` para enviar e receber dados, respectivamente.
 
@@ -625,3 +629,134 @@ int bytes = recv(clientfd, buf, sizeof(buf), 0);
 ```
 
 Nesse exemplo, a função fica esperando receber informações vindas de `clientfd`. As informações serão armazenadas em `buf`, que pode conter no máximo `sizeof(buf)` bytes de uma única vez. É retornado pra variável `bytes` a quantidade de bytes recebidos. Assim como `send`, é possível usar as flags `MSG_NOSIGNAL` e `MSG_DONTWAIT` para os mesmos propósitos.
+
+## Encerrando conexão com `close` ou `shutdown`
+
+Caso necessite encerrar uma conexão, você pode fazer isso com as funções `close` e `shutdown`.
+
+Definição de `close`:
+
+```C
+int close(int fd);
+```
+
+| Parâmetro  | Descrição |
+|-----------:|-----------|
+| `fd`   | é o file descriptor que será fechado, ou seja, um endpoint da conexão |
+
+Qualquer tentativa de escrita ou leitura por parte do host remoto que se comunique com esse socket falhará. Por exemplo, se um cliente chamar `close` no socket usado para se comunicar com o servidor, qualquer chamada à `recv` feita pelo servidor que se refira à este cliente retornará 0, pois a outra parte(cliente) fechou a conexão. Caso `close` seja interrompido por um sinal, falhará retornando -1 e configurando errno apropriadamente.
+
+A função `shutdown`, por sua vez, consegue encerrar parcialmente uma conexão, isto é, apenas uma de suas "vias", ou seja, é possível encerrar a via de escrita, enquanto a de leitura continua disponível e vice-versa.
+
+Definição de `shutdown`:
+
+```C
+int shutdown(int fd, int how);
+```
+
+| Parâmetro  | Descrição |
+|-----------:|-----------|
+| `fd`   | é o file descriptor que será fechado, ou seja, um endpoint da conexão |
+| `how`  | a forma como esse endpoint será encerrado. SHUT_RD para encerrar a leitura; SHUT_WR para encerrar a escrita; e SHUT_RDWR para encerrar ambas as vias (basicamente um `close`). |
+
+## Servidor e cliente UDP (Datagram Socket)
+
+Até agora vimos apenas os Stream Sockets, ou seja, um tipo de socket que é orientado à conexão; o protocolo padrão para esse tipo de socket é o TCP. Contudo, há também o tipo Datagram Sockets, que não possui uma conexão/sessão estabelecida entre os hosts da comunicação e é menos seguro que o stream socket; o protocolo padrão desse tipo é o UDP.
+
+Como não há uma conexão, o servidor não deve utilizar as funções `listen` e `accept`, mas ainda é necessário usar o `bind`, para atrelar o servidor com um endereço. Para que o servidor receba as informações de um cliente qualquer, ele utiliza a função `recvfrom`. Exemplo:
+
+Definição de `recvfrom`:
+
+```C
+ssize_t recvfrom(int sockfd, void* buf, size_t len, int flags,
+                 struct sockaddr* src_addr, socklen_t* addrlen);
+```
+
+| Parâmetro  | Descrição |
+|-----------:|-----------|
+| `sockfd`   | socket que ficará esperando por informações vindas de qualquer host remoto |
+| `buf`      | buffer onde as informações recebidas serão armazenadas |
+| `len`      | tamanho de `buf` |
+| `flags`    | flags que alteram o comportamento da função, assim como em `recv`
+| `src_addr` | ptr p/ a struct que será preenchida com informações de endereço do host remoto |
+| `addrlen`  | inicialmente dever ser preenchido com o tamanho da struct passada em `src_addr`, depois que a função retornar, seu valor é alterado para o real tamanho de `src_addr`, assim como em `recv` |
+
+Um servidor UDP pode ser construido dessa forma:
+
+```C
+struct addrinfo hints = {0};
+hints.ai_family = AF_UNSPEC; // IPv4 ou IPv6
+hints.ai_socktype = SOCK_DGRAM; // datagram socket (udp)
+
+struct addrinfo* res;
+getaddrinfo(..., &res); // chamada igual às já vistas até agora
+
+int sockfd = socket(res->ai_family, ...); // chamada igual às já vistas até agora
+
+bind(sockfd, ...); // chamada igual às ja vistas até agora;
+
+char buffer[1024];
+
+struct sockaddr_storage ss = {0};
+while(1) { // loop infinito para receber os dados
+  unsigned size = sizeof(ss);
+  int recv_bytes = recvfrom(sockfd, buffer, 1024, 0, (struct sockaddr*) &ss, &size);
+
+  // após receber uma mensagem, 'ss' é preenchida com informações sobre o host remoto que 
+  // enviou os dados e 'size' tem seu valor alterado para o tamanho da struct que representa
+  // o endereço (sockaddr_in ou sockaddr_in6).
+
+  printf("Mensagem recebida: %s!\n", buffer); // exibe a mensagem recebida
+}
+```
+
+Note que antes de esperar por dados, nenhuma conexão é estabelecida com nenhum cliente, dessa forma, `recvfrom` esperará por dados enviados de qualquer um.
+
+Um cliente UDP é mais simples ainda, basta criar o socket para servir de endpoint da comunicação e usar a função `sendto`.
+
+Definição de `sendto`:
+
+```C
+ssize_t sendto(int sockfd, const void* buf, size_t len, int flags,
+               const struct sockaddr* dest_addr, socklen_t addrlen);
+```
+
+| Parâmetro  | Descrição |
+|-----------:|-----------|
+| `sockfd`   | socket que serve de endpoint para enviar os dados |
+| `buf`      | buffer que contém os dados a serem enviados |
+| `len`      | tamanho de `buf` |
+| `flags`    | flags que alteram o comportamento da função, assim como em `send`
+| `dest_addr`| ptr p/ a struct que será preenchida com informações de endereço do servidor |
+| `addrlen`  | tamanho da struct passada em `dest_addr` |
+
+Exemplo de cliente UDP:
+
+```C
+struct addrinfo hints = {0};
+hints.ai_family = AF_UNSPEC; // IPv4 ou IPv6
+hints.ai_socktype = SOCK_DGRAM; // Datagram Socket (UDP)
+
+struct addrinfo* res;
+getaddrinfo(..., &res); // assim como já demonstrado
+
+int sockfd = socket(res->ai_family, ...); // assim como já demonstrado
+
+char buffer[1024] = "ola, exemplo de mensagem!";
+
+int send_bytes = sendto(sockfd, buffer, strlen(buffer) + 1, 0, res->ai_addr, res->ai_addrlen);
+```
+
+Uma coisa interessante é que após o servidor receber os dados de um host remoto, é possível que ele utilize o mesmo endpoint de comunicação(socket) para enviar dados para esse mesmo host utilizando as informações de endereço retornadas nos dois últimos parâmetro de `recvform`. Exemplo:
+
+```C
+// Servidor
+
+...
+
+recvfrom(sockfd, buf, sizeof(buf), 0, (struct sockaddr*) &ss, &size);
+
+// utilizo o mesmo endpoint para enviar uma mensagem para o host remoto que acabou
+// de se comunicar com o servidor (suas informações de enderçeo estão em 'ss')
+sendto(sockfd, "ola, recebi sua msg", 20, 0, (struct sockaddr*) &ss, size);
+```
