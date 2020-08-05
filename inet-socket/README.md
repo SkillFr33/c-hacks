@@ -760,3 +760,22 @@ recvfrom(sockfd, buf, sizeof(buf), 0, (struct sockaddr*) &ss, &size);
 // de se comunicar com o servidor (suas informações de enderçeo estão em 'ss')
 sendto(sockfd, "ola, recebi sua msg", 20, 0, (struct sockaddr*) &ss, size);
 ```
+
+## Avançando
+
+O conteúdo visto até agora é o mínimo necessário para construir um servidor e cliente simples, ou seja, o básico. Assuntos que vão um pouco mais além serão vistos a partir deste ponto.
+
+## Bloqueio de sockets
+
+Quando se cria um socket, este é configurado como um socket "bloqueante", isto é, qualquer ação que não possa ser realizada no momento bloqueará seu processo até que esteja disponível. Um exemplo é chamar a função `accept` quando não há nenhuma requisição de conexão pendente; ou, também, como chamar `recv` sem que o cliente tenha enviado alguma mensagem. É possível configurar um socket para que não bloqueio nessas ocasiões, utiliznando a função `fcntl` (file control).
+
+Essa função permite realizar diversas configurações em arquivos, mas lembre-se, em sistemas Unix-like, um socket é considerado como um arquivo virtual, ou seja, não é exatamente um arquivo em disco, contudo é possível realizar operações de entrada e saída.
+
+Para marcar o socket como não bloqueante, basta chamar `fcntl` com os seguintes parâmetros:
+
+```C
+int sockfd = socket(...);
+fcntl(sockfd, F_SETFL, O_NONBLOCK);
+```
+
+A partir daí, qualquer operação que bloqueio o processo, retornará imediatamente com o valor -1, e o conteúdo de `errno` será atualizado com o erro apropriado, podendo ser `EAGAIN` ou `EWOULDBLOCK`.
