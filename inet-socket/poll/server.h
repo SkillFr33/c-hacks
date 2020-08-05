@@ -17,6 +17,7 @@ typedef struct {
 
 int new_tcp_server(const char* addr, const char* port);
 void get_addr_and_port(struct sockaddr* sa, int* port, char* buffer, size_t len);
+void broadcast(pollfd_list* pfd_list, char* buf, size_t bytes, const int index_sender);
 
 void panic(const char* func_name);
 void net_panic(const char* func_name, int err);

@@ -94,6 +94,14 @@ void del_from_pollfd_list(pollfd_list* pfd_list, const int index) {
   pfd_list->size--; // decrementa o tamanho
 }
 
+void broadcast(pollfd_list* pfd_list, char* buf, size_t bytes, const int index_sender) {
+  for(int x = 1; x < index_sender; x++)
+    send(pfd_list->pfds[x].fd, buf, bytes, 0);
+
+  for(int x = index_sender + 1; x < pfd_list->size; x++)
+    send(pfd_list->pfds[x].fd, buf, bytes, 0);
+}
+
 void panic(const char* func_name) {
   perror(func_name);
   exit(EXIT_FAILURE);

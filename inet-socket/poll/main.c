@@ -69,6 +69,7 @@ int main(int argc, char* argv[]) {
         printf("Cliente de socket %d enviou: ", clientfd);
         fflush(stdout); // força um flush em stdout para exibir a mensagem do printf acima
         write(1, buffer, bytes);
+        broadcast(&pfd_list, buffer, bytes, fd_index); // replica mensagem para demais clientes
       }
       else
         perror("recv"); // exibo mensagem do erro que ocorreu receber dados do cliente
