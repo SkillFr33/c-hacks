@@ -834,3 +834,59 @@ struct pollfd {
   short revents; // bitmask dos últimos eventos que ocorreram em fd
 };
 ```
+
+Exemplo de atribuição à estrutura:
+
+```C
+...
+
+int client_a = accept(...);
+int client_b = accept(...);
+
+...
+
+struct pollfd pfd[2]; // array de dois elemento
+pfd[0].fd     = client_a;
+pfd[0].events = POLLIN;
+
+pfd[1].fd     = client_b;
+pfd[1].events = POLLIN;
+```
+
+Nesse exemplo, criei um vetor de dois elementos de `struct pollfd` para monitorar apenas o evento de entrada(POLLIN) que possa ocorrer nos sockets client_a e client_b. Não é necessário atribuir um valor ao campo `revents`, pois ele é alterado após a syscall retornar, marcando qual evento que ocorreu em determinado socket.
+
+A chamada à função fica assim:
+
+```C
+char buffer[1024];
+
+while(poll(pfd, sizeof(pfd), -1) != -1) {
+
+  // for para verificar qual socket sofreu o evento de entrada
+  for(int i = 0; i < sizeof(pfd); i++) {
+
+    // operação bit-a-bit para verificar se o evento de POLLIN ocorreu com o socket em questão
+    if(pfd[i].revents & POLLIN) {
+      int bytes = recv(pfd[i].fd, buffer, sizeof(buffer), 0);
+
+      // validação de desconnect e erro
+      if(bytes == 0) {
+        printf("Cliente de socket %d desconectou!", pfd[i].fd);
+        close(pfd[i].fd);
+      }
+      else if(bytes == -1)
+        perror("recv");
+      else
+        printf("Cliente de socket %d enviou %s\n", pfd[i].fd, buffer);
+
+      break;
+    } // end if
+  } // end for
+} // end while
+```
+
+A syscall `poll` bloqueia o processo até que algum evento de POLLIN ocorra em um dos dois sockets presentes no vetor `pfd`. Note que após o retorno de `poll` eu realizo uma busca para verificar qual socket sofreu o evento, isso é necessário, pois a syscall não te informa isso. Para encontrar o socket, é só fazer uma operação AND bit-a-bit(&) com o campo `revents` que contém o histórico dos últimos eventos que ocorreram nesse socket.
+
+Outra informação importante é que o socket utilizado para aceitar requisição de conexão também pode ser inserido nesse monitoramento. Toda vez que uma requisição chega, ocorre um evento de POLLIN no socket em questão, dessa forma você consegue realizar o mesmo processo mostrado acima, contudo verificando se o socket é o listener.
+
+Também é possível que um evento inesperado ocorra e faça com que poll retorne, dessa forma, é importante validar isso. No caso do exemplo acima, eu teria percorrida todo o vetor sem achar o socket que sofreu o evento.
