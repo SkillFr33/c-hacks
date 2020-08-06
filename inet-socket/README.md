@@ -778,4 +778,59 @@ int sockfd = socket(...);
 fcntl(sockfd, F_SETFL, O_NONBLOCK);
 ```
 
-A partir daí, qualquer operação que bloqueio o processo, retornará imediatamente com o valor -1, e o conteúdo de `errno` será atualizado com o erro apropriado, podendo ser `EAGAIN` ou `EWOULDBLOCK`.
+A partir daí, qualquer operação que bloqueio o processo, retornará imediatamente com o valor -1, e o conteúdo de `errno` será atualizado com o erro apropriado, podendo ser `EAGAIN` ou `EWOULDBLOCK`. Com isso, você pode
+ficar checando se o endpoint de comunicação com o cliente está apto a enviar ou receber mensagens. Exemplo:
+
+```C
+// configurando o endpoint p/ se comunicar com cliente para não bloqueante
+fcntl(clientfd, F_SETFL, O_NONBLOCK);
+
+char buffer[1024];
+
+while(1) {
+  // se não tiver nenhum dado disponível no momento, retorna -1
+  int bytes = recv(clientfd, buffer, sizeof(1024), 0);
+  
+  // verifica se o cliente desconectou ou teve alguma resposta
+  if(bytes == 0)
+    break;
+  if(bytes != -1)
+    write(1, buffer, bytes);
+}
+```
+
+Essa técnica de ficar checando por entra/saída é conhecida como **poll**. Ela não é muito efetiva, pois o processo fica num estado de **busy wait\***, consumindo tempo e processamento da CPU sem fazer nada de útil.
+
+---
+
+**\* busy wait:** o processo fica esperando por determinada condição de forma ativa, ou seja, ainda consumindo CPU.
+
+---
+
+## Syscall `poll`
+
+Realizar o poll manualmente é uma tarefa pouco efetiva, devido ao busy wait do processo. A interface de chamadas ao sistema provê a syscall `poll` para realizar isso de forma mais otimizada, pois o processo entra num estado de sleep até que determinado evento de entrada/saída ocorra num dos file descriptors que a função monitora.
+
+Definição de `poll`:
+
+```C
+int poll(struct pollfd fds[], nfds_t nfds, int timeout);
+```
+
+| Parâmetro  | Descrição |
+|-----------:|-----------|
+| `fds`      | vetor contendo cada file descriptor e evento correspondente a ser monitorado |
+| `nfds`     | tamanho do vetor `fds` |
+| `timeout`  | tempo máximo em milissegundos que `poll` esperará por um evento; -1 para infinito |
+
+O parâmetro `fds` é um vetor de `struct pollfd`, que é uma estrutura que contém como membro o file descriptor, os eventos que serão monitorados desse file descriptor e os últimos eventos que ocorreram. Retorna -1 em caso de erro e 0 caso ocorra um timeout.
+
+Definição de `struct pollfd`:
+
+```C
+struct pollfd {
+  int fd;        // file descriptor a ser monitorado
+  short events;  // bitmask dos eventos de fd que serão monitorados
+  short revents; // bitmask dos últimos eventos que ocorreram em fd
+};
+```
