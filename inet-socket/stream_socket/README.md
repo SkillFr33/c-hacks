@@ -7,7 +7,7 @@ Compilar `server`
 ```bash
 cd bin/server
 make all
-./server [PORT]
+./server [ADDR] [PORT]
 ```
 
 Compilar `client`
