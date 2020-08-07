@@ -863,7 +863,7 @@ char buffer[1024];
 while(poll(pfd, sizeof(pfd), -1) != -1) {
 
   // for para verificar qual socket sofreu o evento de entrada
-  for(int i = 0; i < sizeof(pfd); i++) {
+  for(int i = 0; i < 2; i++) {
 
     // operação bit-a-bit para verificar se o evento de POLLIN ocorreu com o socket em questão
     if(pfd[i].revents & POLLIN) {
@@ -890,3 +890,21 @@ A syscall `poll` bloqueia o processo até que algum evento de POLLIN ocorra em u
 Outra informação importante é que o socket utilizado para aceitar requisição de conexão também pode ser inserido nesse monitoramento. Toda vez que uma requisição chega, ocorre um evento de POLLIN no socket em questão, dessa forma você consegue realizar o mesmo processo mostrado acima, contudo verificando se o socket é o listener.
 
 Também é possível que um evento inesperado ocorra e faça com que poll retorne, dessa forma, é importante validar isso. No caso do exemplo acima, eu teria percorrida todo o vetor sem achar o socket que sofreu o evento.
+
+Outra função analoga à `poll` é a `ppoll`. Ela não só permite monitorar eventos em um array de file descriptors, mas também bloquear um conjunto de sinais. Dessa forma, ela possui um parâmetro a mais, que é a máscara de sinais, indicando quais sinais serão bloqueados enquanto ppoll aguarda um evento. Após o retorno de ppoll o sinal será apropriadamente tratado pelo seu handler padrão ou por um handler customizado (se o handler padrão for encerrar o processo, isso ainda ocorrerá). Note que ppoll realiza tudo isso de forma atômica.
+
+Definição de `ppoll`:
+
+```C
+int ppoll(struct pollfd *fds, nfds_t nfds,
+          const struct timespec *tmo_p,
+          const sigset_t *sigmask);
+```
+
+| Parâmetro  | Descrição |
+|-----------:|-----------|
+| `fds`      | vetor contendo cada file descriptor e evento correspondente a ser monitorado |
+| `nfds`     | tamanho do vetor `fds` |
+| `tmo_p`    | tempo máximo que `poll` esperará por um evento; NULL para bloquear indefinitivamente |
+| `sigmask`  | conjunto dos sinais que serão bloqueados |
+
