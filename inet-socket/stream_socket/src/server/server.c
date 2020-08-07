@@ -58,7 +58,7 @@ void get_addr_and_port(struct sockaddr* sa, int* port, char* buffer, size_t len)
   }
 }
 
-void handle_client(int client_fd) {
+void handle_client(int client_fd, struct sockaddr_storage ss) {
   char buffer[1024];
   int bytes;
 
@@ -66,11 +66,6 @@ void handle_client(int client_fd) {
   struct pollfd pfd[1];
   pfd[0].fd = client_fd;
   pfd[0].events = POLLIN;
-
-  // adquirindo estrutura contendo informações de endereço do cliente através do fd 
-  struct sockaddr_storage ss;
-  unsigned size = sizeof(ss);
-  getpeername(client_fd, (struct sockaddr*) &ss, &size);
 
   // adquirindo endereço de IP e porta do cliente 
   char str_ip[INET6_ADDRSTRLEN];
@@ -83,7 +78,7 @@ void handle_client(int client_fd) {
     
     // verificando se houve timeout
     if(poll_ret == 0) {
-      printf("O cliente %s:%d desconectado devido timeout!\n", str_ip, port);
+      printf("O cliente %s:%d desconectado por timeout!\n", str_ip, port);
       send(client_fd, "timeout!\n", 9, MSG_DONTWAIT);
       exit(0);
     }

@@ -56,7 +56,7 @@ int main(int argc, char* argv[]) {
         panic("fork");
       case 0: { // processo filho
         close(server_fd); // o processo filho não precisa desse socket
-        handle_client(client_fd);
+        handle_client(client_fd, client_ss);
       }
       default: // processo pai
         close(client_fd); // o processo pai não precisa desse socket

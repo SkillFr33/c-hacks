@@ -17,7 +17,7 @@
 #define TIMEOUT 10
 
 int new_tcp_server(const char* addr, const char* port);
-void handle_client(int client_fd);
+void handle_client(int client_fd, struct sockaddr_storage ss);
 void get_addr_and_port(struct sockaddr* sa, int* port, char* buffer, size_t len);
 
 #endif
