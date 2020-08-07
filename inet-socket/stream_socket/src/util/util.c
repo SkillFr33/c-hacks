@@ -3,6 +3,7 @@
 #include <netdb.h>
 #include <stdio.h>
 #include <string.h>
+#include <poll.h>
 #include <ctype.h>
 #include "./util.h"
 
@@ -42,4 +43,18 @@ void replace(char* buffer, char old, char new) {
   temp = strchr(buffer, old);
   if(temp)
     *temp = new;
+}
+
+int get_fd_by_event(struct pollfd* pfd, size_t pfd_size, int event) {
+  int i;
+  for(i = 0; i < pfd_size; i++)
+    if(pfd[i].revents & event)
+      break;
+  
+  // evento inesperado
+  if(i == pfd_size)
+    return -1;
+  
+  // retorna fd que sofreu 'event'
+  return pfd[i].fd;
 }
