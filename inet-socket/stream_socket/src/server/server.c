@@ -4,6 +4,7 @@
 #define __USE_XOPEN2K
 #endif
 #include <netdb.h>
+#include <poll.h>
 #include <unistd.h>
 #include <arpa/inet.h>
 #include "../util/util.h"
@@ -61,17 +62,35 @@ void handle_client(int client_fd) {
   char buffer[1024];
   int bytes;
 
-  while(1) {
+  // configurando pollfd para monitorar evento de entrada em client_fd
+  struct pollfd pfd[1];
+  pfd[0].fd = client_fd;
+  pfd[0].events = POLLIN;
+
+  // adquirindo estrutura contendo informações de endereço do cliente através do fd 
+  struct sockaddr_storage ss;
+  unsigned size = sizeof(ss);
+  getpeername(client_fd, (struct sockaddr*) &ss, &size);
+
+  // adquirindo endereço de IP e porta do cliente 
+  char str_ip[INET6_ADDRSTRLEN];
+  int port;
+  get_addr_and_port((struct sockaddr*) &ss, &port, str_ip, sizeof(str_ip));
+
+  // esperando por mensagens do cliente. 5 segundos sem receber nada = timeout
+  int poll_ret = 0;
+  while( (poll_ret = poll(pfd, 1, 5000)) != -1 ) {
+    
+    // verificando se houve timeout
+    if(poll_ret == 0) {
+      printf("O cliente %s:%d desconectado devido timeout!\n", str_ip, port);
+      send(client_fd, "timeout!\n", 9, MSG_DONTWAIT);
+      exit(0);
+    }
+    
     // recebe mensagem do cliente
     bytes = recv(client_fd, buffer, sizeof(buffer), MSG_NOSIGNAL);
-    if(bytes == 0) {
-      struct sockaddr_storage ss;
-      unsigned size = sizeof(ss);
-      getpeername(client_fd, (struct sockaddr*) &ss, &size);
-      char str_ip[INET6_ADDRSTRLEN];
-      int port;
-      get_addr_and_port((struct sockaddr*) &ss, &port, str_ip, sizeof(str_ip));
-      
+    if(bytes == 0) {     
       printf("O cliente %s:%d desconectou!", str_ip, port);
       exit(0);
     }
@@ -84,4 +103,5 @@ void handle_client(int client_fd) {
       panic("send");
   }
 
+  panic("poll"); // erro ao monitorar evento de entrada em client_fd
 }
