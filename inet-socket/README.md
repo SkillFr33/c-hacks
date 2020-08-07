@@ -908,3 +908,50 @@ int ppoll(struct pollfd *fds, nfds_t nfds,
 | `tmo_p`    | tempo máximo que `poll` esperará por um evento; NULL para bloquear indefinitivamente |
 | `sigmask`  | conjunto dos sinais que serão bloqueados |
 
+Exemplo de código:
+
+```C
+// criando pollfd para monitorar eventos de entrada na entrada padrão
+struct pollfd pfd[1];
+pfd->fd = STDIN_FILENO;
+pfd->events = POLLIN;
+
+// configurando signal handler para SIGINT
+struct sigaction sa;
+sa.sa_handler = sigint_handler;
+sigemptyset(&sa.sa_mask);
+sigaction(SIGINT, &sa, NULL);
+
+// conjunto de sinais que serão bloqueados enquanto ppoll estiver esperando
+sigset_t sigset;
+sigemptyset(&sigset);
+sigaddset(&sigset, SIGINT); // adiciono SIGINT ao conjunto
+
+char buffer[1024]; // buffer para armazenar o texto lido de stdin
+
+while(ppoll(pfd, 1, NULL, &sigset) != -1) {
+
+  // verificando se realmente ocorreu um evento de entrada
+  if(pfd[0].revents & POLLIN) {
+    puts("evento de entrada em stdin!");
+    int bytes = read(pfd[0].fd, buffer, sizeof(buffer));
+    write(STDOUT_FILENO, buffer, bytes);
+  }
+  else
+    puts("Evento inesperado!");
+}
+
+perror("ppoll");
+```
+
+Signal handler:
+
+```C
+void sigint_handler(int sig) {
+  write(STDOUT_FILENO, "SIGINT capturado!\n", 18);
+}
+```
+
+Nesse exemplo, caso eu pressione `CTRL + C` no terminal, nada acontecerá. Ao enviar alguma coisa para a entrada padrão, o evento de POLLIN será capturado, dessa forma `ppoll` retornará, o sinal lançado enquanto a função esperava será tratado pelo handler `sigint_handler` e o código dentro do while executará.
+
+Se a linha `sigaddset(&sigset, SIGINT);` for comentada, `ppoll` terá o mesmo comportamente de um `poll`, ou seja, a execução da função será interrompida para executar o handler e depois retornará -1.
