@@ -14,15 +14,16 @@
 
 int main(int argc, char* argv[]) {
 
-  if(argc != 2) {
-    fprintf(stderr, "Uso: %s [PORT]\n", argv[0]);
+  if(argc != 3) {
+    fprintf(stderr, "Uso: %s [ADDR] [PORT]\n", argv[0]);
     exit(EXIT_FAILURE);
   }
 
-  char* port = argv[1];
+  char* addr = argv[1];
+  char* port = argv[2]; 
 
   // addr NULL: wildcard address
-  int server_fd = new_tcp_server(NULL, port);
+  int server_fd = new_tcp_server(addr, port);
   printf("Servidor escutando por conexões na porta %s\n", port);
 
   // configurando handler para o sinal SIGCHLD
