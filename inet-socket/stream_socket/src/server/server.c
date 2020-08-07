@@ -12,6 +12,9 @@
 // quantidade de requisição pendentes de serem aceitas
 #define BACKLOG 5
 
+// timeout ao ficar 10s sem receber mensagem do cliente
+#define TIMEOUT 10
+
 // inicializa um servidor tcp e retorna seu socket(file descriptor)
 int new_tcp_server(const char* addr, const char* port) {
 
@@ -72,13 +75,13 @@ void handle_client(int client_fd, struct sockaddr_storage ss) {
   int port;
   get_addr_and_port((struct sockaddr*) &ss, &port, str_ip, sizeof(str_ip));
 
-  // esperando por mensagens do cliente. 5 segundos sem receber nada = timeout
+  // esperando por mensagens do cliente. TIMEOUT segundos sem receber nada desconecta o cliente
   int poll_ret = 0;
-  while( (poll_ret = poll(pfd, 1, 5000)) != -1 ) {
+  while( (poll_ret = poll(pfd, 1, TIMEOUT * 1000)) != -1 ) {
     
     // verificando se houve timeout
     if(poll_ret == 0) {
-      printf("O cliente %s:%d desconectado por timeout!\n", str_ip, port);
+      printf("O cliente %s:%d foi desconectado por timeout!\n", str_ip, port);
       send(client_fd, "timeout!\n", 9, MSG_DONTWAIT);
       exit(0);
     }
