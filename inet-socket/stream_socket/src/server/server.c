@@ -94,7 +94,7 @@ void handle_client(int client_fd, struct sockaddr_storage ss) {
     // recebe mensagem do cliente
     bytes = recv(client_fd, buffer, sizeof(buffer), MSG_NOSIGNAL);
     if(bytes > 0) {
-      toggle_case(buffer); // alterna o case das
+      toggle_case(buffer); // alterna o case das letras
       bytes = send(client_fd, buffer, bytes, 0); // reenvia a mensagem de volta para o cliente
       if(bytes == -1)
         panic("send");
