@@ -69,10 +69,13 @@ int main(int argc, char* argv[]) {
       
       // recebe uma mensagem do servidor
       bytes = recv(sockfd, buffer, sizeof(buffer), MSG_NOSIGNAL);
-      if(bytes <= 0)
-        break;
-      
-      printf("Mensagem recebida: %s\n", buffer);
+
+      if(bytes > 0)
+        printf("Mensagem recebida: %s\n", buffer);
+      else if(bytes == 0)
+        break; // servidor encerrou conexão
+      else
+        perror("recv"); // erro em recv
     }
   } // end while
 
