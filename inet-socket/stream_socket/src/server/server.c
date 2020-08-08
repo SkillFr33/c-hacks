@@ -79,6 +79,11 @@ void handle_client(int client_fd, struct sockaddr_storage ss) {
   int poll_ret = 0;
   while( (poll_ret = poll(pfd, 1, TIMEOUT * 1000)) != -1 ) {
     
+    // se o socket do cliente não sofreu nenhum evento de POLLIN, algum evento inesperado ocorreu,
+    // fazendo com que poll retornasse
+    if(!(pfd[0].fd & POLLIN))
+      continue;
+
     // verificando se houve timeout
     if(poll_ret == 0) {
       printf("O cliente %s:%d foi desconectado por timeout!\n", str_ip, port);
