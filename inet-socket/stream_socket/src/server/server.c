@@ -79,11 +79,6 @@ void handle_client(int client_fd, struct sockaddr_storage ss) {
   int poll_ret = 0;
   while( (poll_ret = poll(pfd, 1, TIMEOUT * 1000)) != -1 ) {
     
-    // se o socket do cliente não sofreu nenhum evento de POLLIN, algum evento inesperado ocorreu,
-    // fazendo com que poll retornasse
-    if(!(pfd[0].fd & POLLIN))
-      continue;
-
     // verificando se houve timeout
     if(poll_ret == 0) {
       printf("O cliente %s:%d foi desconectado por timeout!\n", str_ip, port);
@@ -91,19 +86,25 @@ void handle_client(int client_fd, struct sockaddr_storage ss) {
       exit(0);
     }
     
+    // se o socket do cliente não sofreu nenhum evento de POLLIN, algum evento inesperado ocorreu,
+    // fazendo com que poll retornasse
+    if(!(pfd[0].revents & POLLIN))
+      continue;
+
     // recebe mensagem do cliente
     bytes = recv(client_fd, buffer, sizeof(buffer), MSG_NOSIGNAL);
-    if(bytes == 0) {     
+    if(bytes > 0) {
+      toggle_case(buffer); // alterna o case das
+      bytes = send(client_fd, buffer, bytes, 0); // reenvia a mensagem de volta para o cliente
+      if(bytes == -1)
+        panic("send");
+    }
+    else if(bytes == 0) {     
       printf("O cliente %s:%d desconectou!", str_ip, port);
       exit(0);
     }
-    else if(bytes == -1)
+    else
       panic("recv");
-
-    toggle_case(buffer);
-    bytes = send(client_fd, buffer, bytes, 0); // reenvia a mensagem de volta para o cliente
-    if(bytes == -1)
-      panic("send");
   }
 
   panic("poll"); // erro ao monitorar evento de entrada em client_fd
