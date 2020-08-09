@@ -23,26 +23,47 @@ int new_tcp_server(const char* addr, const char* port) {
   hints.ai_family   = AF_UNSPEC;    // IPv4 ou IPv6 
   hints.ai_flags    = AI_PASSIVE;   // socket passivo (servidor) 
 
-  struct addrinfo* res; // retorno de getaddrinfo (endereço do servidor)
+  // retorno de getaddrinfo (endereço do servidor) e ponteiro temporário para 
+  // percorrer a lista de endereços.
+  struct addrinfo* res, *temp;
   int err = getaddrinfo(addr, port, &hints, &res);
   if(err != 0)
     net_panic("new_tcp_server: getaddrinfo", err);
   
   // cria o socket com as configurações do endereço retornado por getaddrinfo
-  int sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
-  if(sockfd == -1)
-    panic("new_tcp_server: socket");
+  int sockfd;
+  for(temp = res; temp != NULL; temp = temp->ai_next) {
+    sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+    if(sockfd == -1) {
+      perror("new_tcp_server: socket");
+      continue;
+    }
 
-  // Algumas vezes ao encerrar o servidor, é possível que fique resquícios de sua existencia no kernel,
-  // impossibilitando o uso do endereço e porta que o socket tinha dado bind. Se esse for o caso, tenta 
-  // reutilizá-los
-  int boolean = 1; // opção booleana (sim, no caso)
-  if(setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &boolean, sizeof(boolean)) == -1)
-    panic("setsockopt");
+    // Algumas vezes ao encerrar o servidor, é possível que fique resquícios de sua existencia no kernel,
+    // impossibilitando o uso do endereço e porta que o socket tinha dado bind. Se esse for o caso, tenta 
+    // reutilizá-los
+    int boolean = 1; // opção booleana (sim, no caso)
+    if(setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &boolean, sizeof(boolean)) == -1) { 
+      perror("new_tcp_server: setsockopt");
+      continue;
+    }
 
-  // associo o socket ao endereço
-  if(bind(sockfd, res->ai_addr, res->ai_addrlen) == -1)
-    panic("new_tcp_server: bind");
+    // associo o socket ao endereço
+    if(bind(sockfd, res->ai_addr, res->ai_addrlen) == -1) {
+      close(sockfd);
+      perror("new_tcp_server: bind");
+      continue;
+    }
+
+    // consegui fazer todo o processo de criar o socket e associá-lo à um endereço, encerra o loop
+    break;
+  } // end for
+
+  // se temp for NULL, percorri toda a lista de endereços sem conseguir criar um socket para ele
+  if(temp == NULL) {
+    puts("new_tcp_server: não foi possível criar servidor TCP");
+    exit(EXIT_FAILURE);
+  }
 
   // não necessito mais do 'res'
   freeaddrinfo(res);
