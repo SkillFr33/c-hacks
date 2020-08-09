@@ -955,3 +955,84 @@ void sigint_handler(int sig) {
 Nesse exemplo, caso eu pressione `CTRL + C` no terminal, nada acontecerá. Ao enviar alguma coisa para a entrada padrão, o evento de POLLIN será capturado, dessa forma `ppoll` retornará, o sinal lançado enquanto a função esperava será tratado pelo handler `sigint_handler` e o código dentro do while executará.
 
 Se a linha `sigaddset(&sigset, SIGINT);` for comentada, `ppoll` terá o mesmo comportamente de um `poll`, ou seja, a execução da função será interrompida para executar o handler e depois retornará -1.
+
+## O supremo `epoll`
+
+Assim como `poll` e `ppoll`, `epoll` monitora qualquer evento de entrada e saída de file descriptors especificados pelo programador. Essa função é extramamente superior às já vistas (até mesmo à syscall `select`, que não foi mostrada, mas faz o mesmo papel de monitorar fds), pois consegue realizar a tarefa de monitoramento com performance O(1). Abaixo está uma comparação de tempo de CPU(em segundos) retirada do livro **The Linux Programming Interface, seção 63.4.5**:
+
+| Número de fd | poll | select | epoll |
+| :----------: | :--: | :----: | :---: |
+| 10           | 0.61 | 0.73   | 0.41  |
+| 100          | 2.9  | 3      | 0.42  |
+| 1000         | 35   | 35     | 0.53  |
+| 10000        | 990  | 930    | 0.66  |
+
+Note que a performance de epoll é extremamente superior em todos os cenários, especialmente quando é necessário monitorar quantidades grandes de file descriptors.
+
+Na verdade, `epoll` não é bem uma syscall, mas uma API que proporciona diversas funções para realizar esse processo de polling. Essa API consiste em 3 funções majoritárias: `epoll_create1`, que cria a instância de epoll no kernel; `epoll_ctl`, que configura quais file descriptors - e eventos - serão monitorados por esse instância de epoll; e `epoll_wait`, que bloqueia até que algum evento ocorra em qualquer um dos file descriptors sendo monitorados.
+
+Definição de `epoll_create1`:
+
+```C
+int epoll_create1(int flags);
+```
+
+| Parâmetro  | Descrição |
+|-----------:|-----------|
+| `flags`    | 0 ou O_CLOEXEC |
+
+Foi dito que essa função cria uma instância de epoll no kernel. Essa instância é uma estrutura de dados que serve para dois propósitos: conter uma lista de fd que serão monitorados e uma lista de fd que estão aptos a sofrerem uma operação de entrada/saída. Essas listas são chamadas de *interest list* e *ready list*, respectivamente.
+
+`epoll_create1` retorna um file descriptor, que é uma referência à essa instância gerenciada pelo kernel.
+
+Definição de `epoll_ctl`:
+
+```C
+int epoll_ctl(int epfd, int op, int fd, struct epoll_event* event);
+```
+
+| Parâmetro  | Descrição |
+|-----------:|-----------|
+| `epfd`     | file descriptor da instância de epoll |
+| `op`       | operação a ser realizada nessa instância; EPOLL_CTL_(ADD \| MOD \| DEL) |
+| `fd`       | file descriptor que sofrerá a operação especificada por `op` |
+| `event`    | evento a ser associado com o file descriptor especificado por `fd`. Pode ser NULL caso `op` seja EPOLL_CTL_DEL |
+
+A `struct epoll_event` possui a seguinte definição:
+
+```C
+struct epoll_event {
+  uint32_t     events; // eventos a serem monitorados
+  epoll_data_t data;   // dados informados pelo usuário (deve conter o fd)
+};
+```
+
+O membro `data` é uma union que contém a seguinte definição:
+
+```C
+typedef union epoll_data {
+  void*     ptr; // ponteiro para um tipo definido pelo usuário
+  int       fd;  // file descriptor
+  uint32_t  u32; // inteiro sem sinal de 32 bits
+  uint64_t  u64; // inteiro sem sinal de 64 bits
+} epoll_data_t;
+```
+
+Essa union será retornada por `epoll_wait` quando um evento ocorrer em determinado file descriptor, dessa forma, ela é usada para identificar o file descriptor em questão, então tenha em mente de preencher o membro `fd` (ou o membro `ptr` - que apontaria para uma estrutura definida pelo usuário, contendo o file descriptor) ao usá-la na chamada à `epoll_ctl`.
+
+Após criar a instância de epoll e adicionar na lista os file descriptors que serão monitorados, basta esperar por qualquer evento desejado usando a função `epoll_wait`.
+
+Definição de `epoll_wait`:
+
+```C
+int epoll_wait(int epfd, struct epoll_event* evlist, int maxevents, int timeout);
+```
+
+| Parâmetro   | Descrição |
+|------------:|-----------|
+| `epfd`      | file descriptor da instância de epoll |
+| `evlist`    | vetor contendo informações sobre os eventos que ocorreram em determinado fd |
+| `maxevents` | tamanho máximo de `evlist` |
+| `timeout`   | tempo máximo, em milissegundos, que `epoll_wait` bloqueará esperando por eventos |
+
+Quando `epoll_wait` retorna, o campo `evlist.events` contém uma bitmask de todos os eventos que ocorreram no file descriptor. O file descriptor que sofreu o(s) evento(s) pode ser identificado por um dos membros da union `evlist.data`. Lembre-se, `evlist.data` será igual à informada quando o file descriptor foi adicionado na *interest list*.
