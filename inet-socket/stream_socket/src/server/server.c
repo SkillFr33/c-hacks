@@ -33,6 +33,13 @@ int new_tcp_server(const char* addr, const char* port) {
   if(sockfd == -1)
     panic("new_tcp_server: socket");
 
+  // Algumas vezes ao encerrar o servidor, é possível que fique resquícios de sua existencia no kernel,
+  // impossibilitando o uso do endereço e porta que o socket tinha dado bind. Se esse for o caso, tenta 
+  // reutilizá-los
+  int boolean = 1; // opção booleana (sim, no caso)
+  if(setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &boolean, sizeof(boolean)) == -1)
+    panic("setsockopt");
+
   // associo o socket ao endereço
   if(bind(sockfd, res->ai_addr, res->ai_addrlen) == -1)
     panic("new_tcp_server: bind");
