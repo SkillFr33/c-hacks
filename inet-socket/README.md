@@ -1036,3 +1036,39 @@ int epoll_wait(int epfd, struct epoll_event* evlist, int maxevents, int timeout)
 | `timeout`   | tempo máximo, em milissegundos, que `epoll_wait` bloqueará esperando por eventos |
 
 Quando `epoll_wait` retorna, o campo `evlist.events` contém uma bitmask de todos os eventos que ocorreram no file descriptor. O file descriptor que sofreu o(s) evento(s) pode ser identificado por um dos membros da union `evlist.data`. Lembre-se, `evlist.data` será igual à informada quando o file descriptor foi adicionado na *interest list*.
+
+Exemplo de código:
+
+```C
+// Código sem validação de erros!
+
+// cria uma nova instância de epoll e retorna seu fd
+int epoll_fd = epoll_create1(0); // 0 = sem flags
+
+struct epoll_event event = {0};
+event.events = EPOLLIN; // evento de entrada
+event.data.fd = STDIN_FILENO; // stdin
+
+// adiciona a entrada padrão na lista de fd a serem monitorados
+epoll_ctl(epoll_fd, EPOLL_CTL_ADD, STDIN_FILENO, &event);
+
+struct epoll_event ev[1]; // vetor de 1 elemento
+int ret = epoll_wait(epoll_fd, ev, 1, 5000);
+if(ret == 0)
+  puts("Nada foi enviado na entrada padrão nos últimos 5 segundos!");
+else {
+
+  // verificando se realmente ocorreu o evento de entrada
+  if(ev[0].events & EPOLLIN) {
+    char buffer[1024];
+    fgets(buffer, sizeof(buffer), stdin);
+    printf("Mensagem recebida: %s\n", buffer);
+  }
+  else
+    puts("Evento inesperado!");
+}
+```
+
+Se tudo der certo, `epoll_wait` retorna a quantidade de file descriptors que sofrerão um evento de entrada/saída; 0 caso ocorra timeout; e -1 em caso de erro (errno é configurado para o erro ocorrido).
+
+Para ter acesso às funções e estruturas, é necessário incluir o arquivo de cabeçalho `<sys/epoll.h>`.
