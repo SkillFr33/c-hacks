@@ -2,7 +2,7 @@
 #include <netdb.h>
 #include <stdio.h>
 #include <string.h>
-#include <poll.h>
+#include <sys/epoll.h>
 #include "client.h"
 #include "../util/util.h"
 
@@ -19,31 +19,44 @@ int main(int argc, char* argv[]) {
   // conecta no host/servidor addr:port
   int sockfd = connect_tcp_server(addr, port);
 
-  // pollfd para monitorar evento de entrada
-  struct pollfd pfd[2];
-  pfd[0].fd = 0;          // entrada padrão
-  pfd[0].events = POLLIN; // evento de entrada
+  int epoll_fd = epoll_create1(0);
+  if(epoll_fd == -1)
+    panic("epoll_create");
 
-  pfd[1].fd = sockfd; // socket p/ comunicar com servidor
-  pfd[1].events = POLLIN; // evento de entrada
+  // epoll_event para poder adicionar os file descriptors e seus respectivos eventos a serem monitorados
+  struct epoll_event event = {0};
+  event.events = EPOLLIN; // evento de entrada
+
+  event.data.fd = 0; // entrada padrão
+  if(epoll_ctl(epoll_fd, EPOLL_CTL_ADD, 0, &event) == -1)
+    panic("epoll_ctl");
+  
+  event.data.fd = sockfd; // conexão com o servidor
+  if(epoll_ctl(epoll_fd, EPOLL_CTL_ADD, sockfd, &event) == -1)
+    panic("epoll_ctl");
 
   char buffer[1024]; // buffer para armazenar as mensagens enviadas/recebidas
   int bytes; // quantidade de bytes enviados/recebidos
 
   // lê uma mensagem da entrada padrão e envia para o servidor
-  int poll_ret = 0;
+  int epoll_ret = 0;
+  struct epoll_event evs[2] = {0}; // STDIN_FILENO e sockfd
   while(fprintf(stderr, "Mensagem( [CTRL+D] para sair): "),
-        (poll_ret = poll(pfd, 2, -1)) != -1 ) {
+        (epoll_ret = epoll_wait(epoll_fd, evs, 2, -1)) != -1 ) {
     
     // adquire o fd que sofreu o evento
-    int fd_event = get_fd_by_event(pfd, 2, POLLIN);
+    int fd_event = get_fd_by_event(evs, epoll_ret, EPOLLIN);
     if(fd_event == -1)
       continue; // evento inesperado
 
     // servidor me enviou alguma mensagem
     if(fd_event == sockfd) {
       bytes = recv(sockfd, buffer, sizeof(buffer), MSG_NOSIGNAL);
-      if(bytes == -1)
+      if(bytes == 0) {
+        puts("\nServidor fechou!");
+        exit(0);
+      }
+      else if(bytes == -1)
         break;
       
       if(strncmp(buffer, "timeout", 7) == 0) {
@@ -52,7 +65,6 @@ int main(int argc, char* argv[]) {
       }
     }
     else { // evento de entrada na entrada padrão
-
       if(fgets(buffer, sizeof(buffer), stdin) == NULL)
         break;
 
@@ -79,8 +91,8 @@ int main(int argc, char* argv[]) {
     }
   } // end while
 
-  if(poll_ret == -1)
-    panic("poll");
+  if(epoll_ret == -1)
+    panic("epoll_wait");
 
   return EXIT_SUCCESS;
 }
