@@ -4,7 +4,7 @@
 #define __USE_XOPEN2K
 #endif
 #include <netdb.h>
-#include <poll.h>
+#include <sys/epoll.h>
 #include <unistd.h>
 #include <arpa/inet.h>
 #include "../util/util.h"
@@ -90,33 +90,43 @@ void get_addr_and_port(struct sockaddr* sa, int* port, char* buffer, size_t len)
 }
 
 void handle_client(int client_fd, struct sockaddr_storage ss) {
-  char buffer[1024];
-  int bytes;
+  char buffer[1024]; // buffer que conterá a mensagem enviada pelo cliente
+  int bytes; // retorno de recv e send
 
-  // configurando pollfd para monitorar evento de entrada em client_fd
-  struct pollfd pfd[1];
-  pfd[0].fd = client_fd;
-  pfd[0].events = POLLIN;
+  // criando instância de epoll
+  int epoll_fd = epoll_create1(0);
+  if(epoll_fd == -1)
+    panic("epoll_create");
+
+  // configurando monitoramento do evento de entrada de client_fd
+  struct epoll_event event = {0};
+  event.events = EPOLLIN;
+  event.data.fd = client_fd;
+
+  // adicionando client_fd na lista de sockets a serem monitorados
+  if(epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_fd, &event) == -1)
+    panic("epoll_ctl");
 
   // adquirindo endereço de IP e porta do cliente 
   char str_ip[INET6_ADDRSTRLEN];
-  int port;
+  int port = 0;
   get_addr_and_port((struct sockaddr*) &ss, &port, str_ip, sizeof(str_ip));
 
   // esperando por mensagens do cliente. TIMEOUT segundos sem receber nada desconecta o cliente
-  int poll_ret = 0;
-  while( (poll_ret = poll(pfd, 1, TIMEOUT * 1000)) != -1 ) {
+  int ret = 0;
+  struct epoll_event ev[1]; // vetor de eventos retornados, como monitoro apenas client_fd, o vetor tem tamanho 1
+  while( (ret = epoll_wait(epoll_fd, ev, 1, TIMEOUT * 1000)) != -1 ) {
     
     // verificando se houve timeout
-    if(poll_ret == 0) {
+    if(ret == 0) {
       printf("O cliente %s:%d foi desconectado por timeout!\n", str_ip, port);
       send(client_fd, "timeout!\n", 9, MSG_DONTWAIT);
       exit(0);
     }
     
-    // se o socket do cliente não sofreu nenhum evento de POLLIN, algum evento inesperado ocorreu,
-    // fazendo com que poll retornasse
-    if(!(pfd[0].revents & POLLIN))
+    // se o socket do cliente não sofreu nenhum evento de EPOLLIN, algum evento inesperado ocorreu,
+    // fazendo com que epoll_wait retornasse
+    if(!(ev[0].events & EPOLLIN))
       continue;
 
     // recebe mensagem do cliente
@@ -128,12 +138,12 @@ void handle_client(int client_fd, struct sockaddr_storage ss) {
         panic("send");
     }
     else if(bytes == 0) {     
-      printf("O cliente %s:%d desconectou!", str_ip, port);
+      printf("O cliente %s:%d desconectou!\n", str_ip, port);
       exit(0);
     }
     else
       panic("recv");
   }
 
-  panic("poll"); // erro ao monitorar evento de entrada em client_fd
+  panic("epoll_wait"); // erro ao monitorar evento de entrada em client_fd
 }
