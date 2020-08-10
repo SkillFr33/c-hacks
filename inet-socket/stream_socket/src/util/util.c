@@ -3,7 +3,7 @@
 #include <netdb.h>
 #include <stdio.h>
 #include <string.h>
-#include <poll.h>
+#include <sys/epoll.h>
 #include <ctype.h>
 #include "./util.h"
 
@@ -45,16 +45,12 @@ void replace(char* buffer, char old, char new) {
     *temp = new;
 }
 
-int get_fd_by_event(struct pollfd* pfd, size_t pfd_size, int event) {
+int get_fd_by_event(struct epoll_event* ev, size_t ev_size, int event) {
   int i;
-  for(i = 0; i < pfd_size; i++)
-    if(pfd[i].revents & event)
-      break;
+  for(i = 0; i < ev_size; i++)
+    if(ev[i].events & event)
+      return ev[i].data.fd; // retorna fd que sofreu 'event'
   
   // evento inesperado
-  if(i == pfd_size)
-    return -1;
-  
-  // retorna fd que sofreu 'event'
-  return pfd[i].fd;
+  return -1;
 }
