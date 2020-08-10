@@ -1071,4 +1071,6 @@ else {
 
 Se tudo der certo, `epoll_wait` retorna a quantidade de file descriptors que sofrerão um evento de entrada/saída; 0 caso ocorra timeout; e -1 em caso de erro (errno é configurado para o erro ocorrido).
 
+A função `epoll_wait` também tem uma versão que permite bloquear sinais enquanto espera por um evento: a `epoll_pwait`. Ela recebe uma argumento a mais, que é uma `sigset_t`, ou seja, uma máscara de sinais que serão bloqueados. Após a função retornar devido à um evento, caso um sinal tenha sido enviado enquanto esperava, este será tratado pelo handler correspondente, podendo ou não terminar o processo!
+
 Para ter acesso às funções e estruturas, é necessário incluir o arquivo de cabeçalho `<sys/epoll.h>`.
