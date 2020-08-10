@@ -90,7 +90,7 @@ void get_addr_and_port(struct sockaddr* sa, int* port, char* buffer, size_t len)
 }
 
 void handle_client(int client_fd, struct sockaddr_storage ss) {
-  char buffer[1024]; // buffer que conterá a mensagem enviada pelo cliente
+  char buffer[BUFFERSIZE]; // buffer que conterá a mensagem enviada pelo cliente
   int bytes; // retorno de recv e send
 
   // criando instância de epoll

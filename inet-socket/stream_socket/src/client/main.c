@@ -35,7 +35,7 @@ int main(int argc, char* argv[]) {
   if(epoll_ctl(epoll_fd, EPOLL_CTL_ADD, sockfd, &event) == -1)
     panic("epoll_ctl");
 
-  char buffer[1024]; // buffer para armazenar as mensagens enviadas/recebidas
+  char buffer[BUFFERSIZE]; // buffer para armazenar as mensagens enviadas/recebidas
   int bytes; // quantidade de bytes enviados/recebidos
 
   // lê uma mensagem da entrada padrão e envia para o servidor

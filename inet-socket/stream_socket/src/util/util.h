@@ -7,6 +7,8 @@
   Funções utilitárias
 */
 
+#define BUFFERSIZE 1024
+
 void panic(const char* func_name);
 void net_panic(const char* func_name, int err);
 void sigchld_handler(int sig);
