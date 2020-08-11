@@ -88,8 +88,8 @@ int main(int argc, char* argv[]) {
       replace(buffer, '\n', '\0');
 
       // envia a mensagem para o servidor
-      bytes = send(sockfd, buffer, strlen(buffer) + 1, 0);
-      if(bytes == -1)
+      bytes = send_all(sockfd, buffer, strlen(buffer) + 1);
+      if(bytes > 0)
         panic("send");
     }
   } // end while
