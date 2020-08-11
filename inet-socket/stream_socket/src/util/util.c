@@ -54,3 +54,17 @@ int get_fd_by_event(struct epoll_event* ev, size_t ev_size, int event) {
   // evento inesperado
   return -1;
 }
+
+int send_all(int fd, const char* buffer, size_t len) {
+  size_t bytes_sent = 0;
+
+  while(bytes_sent != len) {
+    int ret = send(fd, buffer, len, MSG_NOSIGNAL);
+    if(ret > 0)
+      bytes_sent += ret;
+    else
+      return -1;
+  }
+
+  return 0;
+}

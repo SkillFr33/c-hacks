@@ -15,5 +15,6 @@ void sigchld_handler(int sig);
 void toggle_case(char* buffer);
 void replace(char* buffer, char old, char new);
 int get_fd_by_event(struct epoll_event* ev, size_t ev_size, int event);
+int send_all(int fd, const char* buffer, size_t len);
 
 #endif
