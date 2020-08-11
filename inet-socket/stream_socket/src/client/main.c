@@ -89,8 +89,8 @@ int main(int argc, char* argv[]) {
 
       // envia a mensagem para o servidor
       bytes = send_all(sockfd, buffer, strlen(buffer) + 1);
-      if(bytes > 0)
-        panic("send");
+      if(bytes == -1)
+        panic("send_all");
     }
   } // end while
 

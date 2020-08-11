@@ -5,6 +5,7 @@
 #include <string.h>
 #include <sys/epoll.h>
 #include <ctype.h>
+#include <errno.h>
 #include "./util.h"
 
 /*
@@ -56,14 +57,20 @@ int get_fd_by_event(struct epoll_event* ev, size_t ev_size, int event) {
 }
 
 int send_all(int fd, const char* buffer, size_t len) {
-  size_t bytes_sent = 0;
+  const char* ptr = buffer; // ponteiro para o buffer. Esse ponteiro será deslocado
 
-  while(bytes_sent != len) {
-    int ret = send(fd, buffer + bytes_sent, len, MSG_NOSIGNAL);
-    if(ret > 0)
-      bytes_sent += ret;
-    else
+  // enquanto o tamanho do buffer for maior que zero, significa que ainda há bytes a serem enviados
+  while(len > 0) {
+    int bytes_sent = send(fd, ptr, len, MSG_NOSIGNAL);
+    
+    // checando por interrupção
+    if(errno == EINTR)
+      continue;
+    else if(bytes_sent == -1)
       return -1;
+
+    ptr += bytes_sent; // desloca ptr pela quantidade de bytes enviados
+    len -= bytes_sent; // decrementa o tamanho do buffer
   }
 
   return 0;
