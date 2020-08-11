@@ -59,7 +59,7 @@ int send_all(int fd, const char* buffer, size_t len) {
   size_t bytes_sent = 0;
 
   while(bytes_sent != len) {
-    int ret = send(fd, buffer, len, MSG_NOSIGNAL);
+    int ret = send(fd, buffer + bytes_sent, len, MSG_NOSIGNAL);
     if(ret > 0)
       bytes_sent += ret;
     else
