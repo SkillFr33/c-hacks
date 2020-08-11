@@ -1074,3 +1074,33 @@ Se tudo der certo, `epoll_wait` retorna a quantidade de file descriptors que sof
 A função `epoll_wait` também tem uma versão que permite bloquear sinais enquanto espera por um evento: a `epoll_pwait`. Ela recebe uma argumento a mais, que é uma `sigset_t`, ou seja, uma máscara de sinais que serão bloqueados. Após a função retornar devido à um evento, caso um sinal tenha sido enviado enquanto esperava, este será tratado pelo handler correspondente, podendo ou não terminar o processo!
 
 Para ter acesso às funções e estruturas, é necessário incluir o arquivo de cabeçalho `<sys/epoll.h>`.
+
+## Garantindo o envio de todos os bytes
+
+Em alguns casos é possível que não seja possível enviar todos os bytes contidos em um buffer com um único `send`. Isso pode ocorrer, por exemplo, quando um sinal é capturado no meio da execução da função. Com isso, é necessário deslocar o ponteiro do buffer com base na quantidade de bytes que foram enviados pelo último `send` (essa quantidade de bytes enviados é retornada pela função) até que todos os bytes sejam enviados para o destino.
+
+Exemplo de código:
+
+```C
+
+char buffer[] = "Ola, essa eh uma mensagem que sera enviada para o host remoto!";
+size_t len = sizeof(buffer); // tamanho do buffer
+
+char* ptr = buffer; // ponteiro para o buffer. Esse ponteiro será deslocado
+
+// enquanto o tamanho do buffer for maior que zero, significa que ainda há bytes a serem enviados
+while(len > 0) {
+  int bytes_sent = send(sockfd, ptr, len, MSG_NOSIGNAL);
+  
+  // checando por interrupção
+  if(errno == EINTR)
+    continue;
+  else if(bytes_sent == -1)
+    panic("Erro fatal em send!");
+
+  ptr += bytes_sent; // desloca ptr pela quantidade de bytes enviados
+  len -= bytes_sent; // decrementa o tamanho do buffer
+}
+```
+
+Com isso, você garente que todos os bytes sejam enviados. Também seria interessante verificar o conteúdo de `errno` após a chamada à `send`, para verificar se houve uma interrupção que impediu os bytes de serem enviados.
