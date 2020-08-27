@@ -1109,7 +1109,7 @@ Com isso, você garente que todos os bytes sejam enviados. Também seria interes
 
 Em alguns casos ao chamar a syscall `bind` - para associar um socket à um determinado endereço e porta - é possível que o erro EADDRINUSE ocorra. Isso pode acontecer após encerrar uma aplicação que estava utilizando esse conjunto de endereço e porta, contudo em alguma estrutura interna do kernel ainda há resquícios de que ele está em uso, mesmo não estando.
 
-Nesses casos, é possível configrar o socket para que ele tente reutilizar esse conjunto de endereço e porta. Isso é feito com a função `setsockopt` (set socket options). Exemplo:
+Nesses casos, é possível configurar o socket para que ele tente reutilizar esse conjunto de endereço e porta. Isso é feito com a função `setsockopt` (set socket options). Exemplo:
 
 ```C
 // tenta reaproveitar o endereço e serviço caso já esteja em uso
