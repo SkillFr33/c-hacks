@@ -1104,3 +1104,25 @@ while(len > 0) {
 ```
 
 Com isso, você garente que todos os bytes sejam enviados. Também seria interessante verificar o conteúdo de `errno` após a chamada à `send`, para verificar se houve uma interrupção que impediu os bytes de serem enviados.
+
+## Configurando socket para tentar reutilizar uma porta
+
+Em alguns casos ao chamar a syscall `bind` - para associar um socket à um determinado endereço e porta - é possível que o erro EADDRINUSE ocorra. Isso pode acontecer após encerrar uma aplicação que estava utilizando esse conjunto de endereço e porta, contudo em alguma estrutura interna do kernel ainda há resquícios de que ele está em uso, mesmo não estando.
+
+Nesses casos, é possível configrar o socket para que ele tente reutilizar esse conjunto de endereço e porta. Isso é feito com a função `setsockopt` (set socket options). Exemplo:
+
+```C
+// tenta reaproveitar o endereço e serviço caso já esteja em uso
+int boolean = 1; // true
+setsockopt(listener, SOL_SOCKET, SO_REUSEADDR, &boolean, sizeof(boolean));
+```
+
+Nesse exemplo, `listener` é o socket do servidor, ou seja, aquele que será associado à um serviço para ficar escutando por requisições de conexão. A macro `SOL_SOCKET` especifica que a opção a ser configurada será à nível de socket, enquanto a macro `SO_REUSEADDR` especifíca a opção a ser configurada, no caso, para reutilizar o endereço/serviço. O terceiro parâmetro, ao utilizar a opção `SO_REUSEADDR`, é basicamente um booleano(verdadeiro ou falso) que indica se a opção está sendo ativada ou não. Por fim, é necessário passar o tamanho de boolean, pois o terceiro parâmetro é convertido para um ponteiro genérico (void*).
+
+Após isso, caso o endereço/serviço realmente não esteja em uso, será possível realizar o `bind` do socket à ele. Exemplo:
+
+```C
+// tenta ligar o socket `listener` ao endereço contido em `res`
+if(bind(listener, res->ai_addr, res->ai_addrlen) == -1)
+  perror("bind");
+```
